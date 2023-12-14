@@ -2,21 +2,13 @@
 import numpy as np
 import pandas as pd
 from typing import Tuple
-from utils import store_initial_prior, get_test_set_people  # store_likelihood_tables
-# from collections import defaultdict
-# from visualize import prior_compare
+from utils import store_initial_prior, get_training_set, get_test_set, read_in_jsons, store_lk_json, store_processed_likelihoods
 
 
-def bayes_iter(
-        prior_array: pd.Series,
-        lk_table: pd.DataFrame,
-        mark: int,
-) -> np.array:
+def bayes_iter(prior: pd.Series, likelihood: np.array) -> np.array:
     """Compute an iteration of a Bayesian update. Multiply the prior to the likelihood and return
     the posterior distribution as a numpy array"""
-    prior = prior_array
-    likelihood = lk_table[str(mark)].to_numpy()
-    unnorm = prior * likelihood
+    unnorm = likelihood * prior  # unnorm = np.array(likelihood)  # * prior
     return unnorm / unnorm.sum()
 
 
@@ -25,69 +17,68 @@ def _prior_dist(informed: bool = True, max_time: int = 500) -> np.array:
     if informed:
         prior = np.loadtxt("processed_data/informed_prior.csv", delimiter=',')
     else:
-        prior = np.ones(max_time + 1) / max_time + 1
+        prior = np.ones(max_time) / max_time
 
-    return prior  # np.array(pd.DataFrame(prior, index=range(max_time + 1)).fillna(0)).reshape(max_time + 1)  # array
+    return prior
 
 
-def full_bayes_table(
+def full_bayes_dict(
         runner_info,
         initial_prior: np.array,
         likelihoods: dict,
-):
+) -> dict:
     """Compute the full bayes table for runner, doing each Bayesian update according to the runner info"""
     bayes_dict = {'0K': initial_prior}
     bayes_dict["Prior"] = bayes_dict["0K"]
 
     for dist, mark in runner_info:
-        lk_table = likelihoods[dist]
+        lk_table = likelihoods[dist].get(str(mark), np.ones(500))  # TODO instance of max_finish
         prior_array = bayes_dict["Prior"]
-        bayes_dict[dist] = bayes_iter(prior_array=prior_array, lk_table=lk_table, mark=mark)
+        bayes_dict[dist] = bayes_iter(prior=prior_array, likelihood=lk_table)
         bayes_dict["Prior"] = bayes_dict[dist]
 
     bayes_dict["Posterior"] = bayes_dict[runner_info[-1][0]]
 
     bayes_dict.pop("Prior")
-    bayes_table = pd.DataFrame(bayes_dict)
-    return bayes_table
+    return bayes_dict
 
 
-def person_table(
+def person_dict(
         person: pd.Series,
         checkpoints: list,
         prior: np.array,
         lk_tables: dict,
-) -> Tuple[pd.DataFrame, int]:
+) -> Tuple[dict, int]:
     """Return both bayes table and actual value"""
     actual = person["Finish Net"]
-    return full_bayes_table(
+    bayes_dict = full_bayes_dict(
         runner_info=[[dist, person[dist]] for dist in checkpoints],
         initial_prior=prior,
         likelihoods=lk_tables,
-    ), actual
+    )
+    return bayes_dict, actual
 
 
 if __name__ == '__main__':
-    store_initial_prior(data=pd.read_csv("processed_data/full_data_mins.csv"))
-
-    # people = pd.read_csv("processed_data/nucr_runners.csv", index_col=0)
-    people = get_test_set_people(pd.read_csv("processed_data/full_data_mins.csv"))
+    data = get_training_set(pd.read_csv("processed_data/full_data_mins.csv"))
+    store_initial_prior(data=data)
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
+
+    store_lk_json(data=data, dists=marks)
+    store_processed_likelihoods(max_length=500)
+    lks = read_in_jsons(marks)
+
+    people = get_test_set(pd.read_csv("processed_data/full_data_mins.csv"))
     show = marks
 
     max_finish = 500
-    # df = pd.read_csv("processed_data/full_data_mins.csv")
-    # df = df[df["Year"] != 2023]
-    # store_likelihood_tables(data=df, marks=checkpoints, finish_range=max_finish, mark_range=max_finish)
-
-    lk_dict = {mark: pd.read_csv(f"likelihood_tables/likelihood_{mark}.csv") for mark in marks}
-
-    for i in range(len(people[:1000])):
+    for i in range(len(people[:3000])):
         person_info = people.iloc[i]
         informed_prior = _prior_dist(informed=True, max_time=max_finish)
-        table1 = person_table(person=person_info, checkpoints=marks, prior=informed_prior, lk_tables=lk_dict)[0]
+        dict1 = person_dict(person=person_info, checkpoints=marks, prior=informed_prior, lk_tables=lks)[0]
 
         uninformed_prior = _prior_dist(informed=False, max_time=max_finish)
-        table2 = person_table(person=person_info, checkpoints=marks, prior=uninformed_prior, lk_tables=lk_dict)[0]
+        dict2 = person_dict(person=person_info, checkpoints=marks, prior=uninformed_prior, lk_tables=lks)[0]
 
-        print(f"Finished: {people.iloc[i]['Name']}")
+        if i % 1000 == 0:
+            print(i)
