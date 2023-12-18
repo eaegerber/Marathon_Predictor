@@ -2,13 +2,14 @@
 import numpy as np
 import pandas as pd
 from typing import Tuple
-from utils import store_initial_prior, get_training_set, get_test_set, read_in_jsons, store_lk_json, store_processed_likelihoods
+from likelihoods import store_likelihoods, process_likelihoods, read_likelihoods
+from utils import store_initial_prior, get_training_set, get_test_set
 
 
 def bayes_iter(prior: pd.Series, likelihood: np.array) -> np.array:
     """Compute an iteration of a Bayesian update. Multiply the prior to the likelihood and return
     the posterior distribution as a numpy array"""
-    unnorm = likelihood * prior  # unnorm = np.array(likelihood)  # * prior
+    unnorm = likelihood * prior
     return unnorm / unnorm.sum()
 
 
@@ -22,21 +23,26 @@ def _prior_dist(informed: bool = True, max_time: int = 500) -> np.array:
     return prior
 
 
-def full_bayes_dict(
-        runner_info,
-        initial_prior: np.array,
-        likelihoods: dict,
-) -> dict:
+def full_bayes_dict(runner_info, initial_prior: np.array, likelihoods: dict) -> dict:
+    runner_dict = {dist: mark for dist, mark in runner_info}
     """Compute the full bayes table for runner, doing each Bayesian update according to the runner info"""
+    last_dict = {"10K": "5K", "15K": "10K", "20K": "15K", "HALF": "20K",
+                 "25K": "HALF", "30K": "25K", "35K": "30K", "40K": "35K"}
     bayes_dict = {'0K': initial_prior}
     bayes_dict["Prior"] = bayes_dict["0K"]
 
     for dist, mark in runner_info:
-        lk_table = likelihoods[dist].get(str(mark), np.ones(500))  # TODO instance of max_finish
-        prior_array = bayes_dict["Prior"]
-        bayes_dict[dist] = bayes_iter(prior=prior_array, likelihood=lk_table)
-        bayes_dict["Prior"] = bayes_dict[dist]
-
+        if dist == "5K":
+            lk_table = likelihoods[dist].get(str(mark), np.ones(500))  # TODO instance of max_finish
+            prior_array = bayes_dict["Prior"]
+            bayes_dict[dist] = bayes_iter(prior=prior_array, likelihood=lk_table)
+            bayes_dict["Prior"] = bayes_dict[dist]
+        else:
+            last_mark = runner_dict[last_dict[dist]]
+            lk_table = likelihoods[dist].get(str(last_mark), {}).get(str(mark), np.ones(500))  # TODO instance of max_finish
+            prior_array = bayes_dict["Prior"]
+            bayes_dict[dist] = bayes_iter(prior=prior_array, likelihood=lk_table)
+            bayes_dict["Prior"] = bayes_dict[dist]
     bayes_dict["Posterior"] = bayes_dict[runner_info[-1][0]]
 
     bayes_dict.pop("Prior")
@@ -64,15 +70,15 @@ if __name__ == '__main__':
     store_initial_prior(data=data)
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
 
-    store_lk_json(data=data, dists=marks)
-    store_processed_likelihoods(max_length=500)
-    lks = read_in_jsons(marks)
+    store_likelihoods(data=data, dists=marks, level=2)
+    process_likelihoods(max_length=500, level=2)
+    lks = read_likelihoods(marks, level=2)
 
     people = get_test_set(pd.read_csv("processed_data/full_data_mins.csv"))
     show = marks
 
     max_finish = 500
-    for i in range(len(people[:3000])):
+    for i in range(len(people[:3001])):
         person_info = people.iloc[i]
         informed_prior = _prior_dist(informed=True, max_time=max_finish)
         dict1 = person_dict(person=person_info, checkpoints=marks, prior=informed_prior, lk_tables=lks)[0]
