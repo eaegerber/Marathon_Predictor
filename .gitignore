@@ -161,5 +161,4 @@ cython_debug/
 
 .DS_Store
 /misc
-/likelihoods/level1/likelihoods*.json
-/likelihoods/level2/likelihoods*.json
+/likelihoods/likelihoods*.json

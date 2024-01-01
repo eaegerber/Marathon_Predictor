@@ -80,7 +80,8 @@ def get_test_set(people: pd.DataFrame):
 
 def store_initial_prior(data: pd.DataFrame, max_time: int = 500, path: str = "processed_data/informed_prior.csv"):
     """Store the initial prior distribution from data in a file"""
-    counts = dict(data["Finish Net"].value_counts())
+    counts = {int(2 * k): v for k, v in (((data["Finish Net"] + 15) // 30) / 2).value_counts().to_dict().items()}
+    # counts = dict(data["Finish Net"].value_counts())
     counts = [counts[idx] if idx in counts.keys() else 0 for idx in range(max_time)]
     prior = np.array(counts) / sum(counts)
     prior.tofile(path, sep=',')

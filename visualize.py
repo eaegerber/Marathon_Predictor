@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from typing import Union, List
 import matplotlib.pyplot as plt
-from likelihoods import read_likelihoods
+from likelihoods import main_lk
 from bayes_model import person_dict, _prior_dist, get_training_set
 from utils import int_to_str_time
 
@@ -98,10 +98,10 @@ def plot_bayes_dict(
 if __name__ == '__main__':
     data = get_training_set(pd.read_csv("processed_data/full_data_mins.csv"))
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
-    lks = read_likelihoods(marks, level=2)
+    lks = main_lk(df=data, marks_list=marks, store=False, process=False)
     people = pd.read_csv("processed_data/nucr_runners.csv", index_col=0)
     show = marks
-    max_finish = 500
+    max_finish = 1001
 
     print(len(people))
     for i in range(len(people)):
