@@ -10,12 +10,13 @@ from utils import get_training_set
 def new_fix_df(old_data: pd.DataFrame, last_dist, last_fix, curr_dist, curr_fix, fin_fix):
     """"""
     labels = {0: 0.5, 15: 0.25, 30: 0, 45: -0.25, 60: -0.5}
+    marks_list = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
     new_data = old_data.copy()
     new_data["0K"] = 0
     new_data[last_dist] = ((new_data[last_dist] + last_fix) // 60) + labels[last_fix]
     new_data[curr_dist] = ((new_data[curr_dist] + curr_fix) // 60) + labels[curr_fix]
     new_data["Finish Net"] = ((new_data["Finish Net"] + fin_fix) // 60) + labels[fin_fix]
-    new_data = new_data[["0K"] + marks + ["Finish Net"]].round(2).astype(str)
+    new_data = new_data[["0K"] + marks_list + ["Finish Net"]].round(2).astype(str)
     return new_data
 
 

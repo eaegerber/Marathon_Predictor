@@ -88,8 +88,17 @@ def store_initial_prior(data: pd.DataFrame, max_time: int = 500, path: str = "pr
     return prior
 
 
+def round_df(secs_df: pd.DataFrame, marks_list: list):
+    secs_df = secs_df.copy()
+    secs_df[marks_list] = (((secs_df[marks_list] + 15) // 30) / 2)
+    secs_df["Finish Net"] = secs_df["Finish Net"] // 60
+    return secs_df
+
+
 if __name__ == '__main__':
-    df = pd.read_csv("processed_data/full_data_mins.csv")
+    df = pd.read_csv("processed_data/full_data_secs.csv")
+    marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
+    df[marks + ["Finish Net"]] = ((df[marks + ["Finish Net"]] // 60) + 1).astype(int)
     data_series = df["Finish Net"]
 
     plot_dist(data=df, checkpoint="Finish Net", ticks=(120, 240, 423), save="plot_dist2")

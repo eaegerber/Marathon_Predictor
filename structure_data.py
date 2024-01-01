@@ -42,5 +42,4 @@ def process_raw_data(
 
 if __name__ == "__main__":
     years = ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "22", "23"]
-    process_raw_data(yrs=years, store=True, mins=True, path="processed_data/full_data_mins.csv")
     process_raw_data(yrs=years, store=True, mins=False, path="processed_data/full_data_secs.csv")

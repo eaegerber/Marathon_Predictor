@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 from likelihoods import main_lk
-from utils import store_initial_prior, get_training_set, get_test_set
+from utils import store_initial_prior, get_training_set, get_test_set, round_df
 
 
 def bayes_iter(prior: pd.Series, likelihood: np.array) -> np.array:
@@ -42,7 +42,7 @@ def full_bayes_dict(
         last_mark = str(float(runner_dict[last_dist]))
         curr_mark = str(float(runner_dict[dist]))
 
-        last_lk = likelihoods[dist].get(str(last_mark), np.ones(1001))
+        last_lk = likelihoods[dist].get(str(last_mark), {})
         lk_array = last_lk.get(str(curr_mark), np.ones(1001))
         p1, p2 = int(lk_array[0]), np.array(lk_array[1:])
         lk_array = np.concatenate([np.zeros(p1), p2])
@@ -77,11 +77,12 @@ def person_dict(
 
 if __name__ == '__main__':
     max_finish = 1001
-    data = get_training_set(pd.read_csv("processed_data/full_data_secs.csv"))
+    df = pd.read_csv("processed_data/full_data_secs.csv")
+    data = get_training_set(df)
     store_initial_prior(data=data, max_time=max_finish)
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
     lks = main_lk(df=data, marks_list=marks, store=False, process=False)
-    people = get_test_set(pd.read_csv("processed_data/full_data_mins.csv"))
+    people = round_df(get_test_set(df), marks)
 
     for i in range(len(people[:3001])):
         person_info = people.iloc[i]

@@ -4,13 +4,13 @@ from typing import Union, List
 import matplotlib.pyplot as plt
 from likelihoods import main_lk
 from bayes_model import person_dict, _prior_dist, get_training_set
-from utils import int_to_str_time
+from utils import int_to_str_time, round_df
 
 
 def prior_compare(
         table1: dict,
         table2: dict,
-        show: List[str],
+        show_list: List[str],
         save: Union[str, None] = None,
         cmap_str: str = 'YlOrRd',
         actual: Union[int, None] = None,
@@ -23,7 +23,7 @@ def prior_compare(
     f, (ax1, ax2) = plt.subplots(1, 2, sharey="all", figsize=(34, 18))
 
     plt.set_cmap(cmap_str)
-    colors = plt.get_cmap()(np.linspace(0.1, 0.8, len(show)))
+    colors = plt.get_cmap()(np.linspace(0.2, 0.8, len(show_list)))
     tables = [table1, table2]
     axes = [ax1, ax2]
     prior = ["Prediction: Informed Prior", "Prediction: Uniform Prior"]
@@ -31,7 +31,7 @@ def prior_compare(
     for axis, table, p in zip(axes, tables, prior):
         table['index'] = range(actual - plot_range, actual + plot_range + 1)
         axis.plot(table['index'], table["0K"], label="prior", color="black")
-        for dist, color in zip(show, colors):
+        for dist, color in zip(show_list, colors):
             axis.plot(table['index'], table[dist], label=dist, color=color)
 
         axis.legend(prop={'size': 20})
@@ -54,7 +54,7 @@ def prior_compare(
 
 def plot_bayes_dict(
         bayes_dict: dict,
-        show: List[str],
+        show_list: List[str],
         save: Union[str, None] = None,
         actual: Union[int, None] = None,
         cmap_str: str = 'YlOrRd',
@@ -64,7 +64,7 @@ def plot_bayes_dict(
     plt.figure(figsize=(12, 12))
 
     plt.set_cmap(cmap_str)
-    colors = plt.get_cmap()(np.linspace(0.1, 0.8, len(show)))
+    colors = plt.get_cmap()(np.linspace(0.2, 0.8, len(show_list)))
 
     if (isinstance(plot_range, int)) and (isinstance(actual, np.int64)):
         bayes_dict = {k: v[actual - plot_range: actual + plot_range + 1] for k, v in bayes_dict.items()}
@@ -73,7 +73,7 @@ def plot_bayes_dict(
         bayes_dict['index'] = range(500)
 
     plt.plot(bayes_dict['index'], bayes_dict["0K"], label="prior", color="black")
-    for dist, color in zip(show, colors):
+    for dist, color in zip(show_list, colors):
         plt.plot(bayes_dict['index'], bayes_dict[dist], label=dist, color=color)
 
     plt.legend()
@@ -96,10 +96,10 @@ def plot_bayes_dict(
 
 
 if __name__ == '__main__':
-    data = get_training_set(pd.read_csv("processed_data/full_data_mins.csv"))
+    data = get_training_set(pd.read_csv("processed_data/full_data_secs.csv"))
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
     lks = main_lk(df=data, marks_list=marks, store=False, process=False)
-    people = pd.read_csv("processed_data/nucr_runners.csv", index_col=0)
+    people = round_df(pd.read_csv("processed_data/nucr_runners.csv"), marks)
     show = marks
     max_finish = 1001
 
@@ -114,7 +114,5 @@ if __name__ == '__main__':
         prior_compare(table_i, table_u, marks, save=f"Compare: {person_info['Name']}",
                       actual=person_info["Finish Net"], plot_range=60, cmap_str="inferno")
 
-        plot_bayes_dict(bayes_dict=table_u, show=marks, save=f"Plot: {person_info['Name']}",
+        plot_bayes_dict(bayes_dict=table_u, show_list=marks, save=f"Plot: {person_info['Name']}",
                         actual=person_info["Finish Net"], plot_range=20, cmap_str="inferno")
-
-        # plot_person(people.iloc[0], lk_dict=likelihoods, name="Vinny", show=checkpoints)
