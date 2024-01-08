@@ -126,6 +126,23 @@ def main_lk(
     return all_lks
 
 
+def _return_lk(
+        lk_dict: dict,
+        dist: str,
+        last_mark: str,
+        curr_mark: str,
+        max_len: int = 1001,
+):
+    """Return the likelihood array from the dictionary"""
+    last_lk = lk_dict[dist].get(last_mark, {})
+    lk_array = last_lk.get(curr_mark, np.ones(1001))
+
+    array1 = np.zeros(int(lk_array[0]))
+    array2 = np.array(lk_array[1:])
+    array3 = np.zeros(max_len - len(array1) - len(array2))
+    return np.concatenate([array1, array2, array3])
+
+
 if __name__ == '__main__':
     data = get_training_set(pd.read_csv("processed_data/full_data_secs.csv"))  # data = quals
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]

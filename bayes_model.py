@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from typing import Tuple
-from likelihoods import main_lk
+from likelihoods import main_lk, _return_lk
 from utils import store_initial_prior, get_training_set, get_test_set, round_df
 
 
@@ -37,22 +37,19 @@ def full_bayes_dict(
     bayes_dict = {'0K': initial_prior}
     bayes_dict["Prior"] = bayes_dict["0K"]
 
-    for dist in ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]:
+    mk = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
+    marks = [m for m in mk if m in runner_dict.keys()]
+    for dist in marks:
         last_dist = last_dict[dist]
         last_mark = str(float(runner_dict[last_dist]))
         curr_mark = str(float(runner_dict[dist]))
 
-        last_lk = likelihoods[dist].get(str(last_mark), {})
-        lk_array = last_lk.get(str(curr_mark), np.ones(1001))
-        p1, p2 = int(lk_array[0]), np.array(lk_array[1:])
-        lk_array = np.concatenate([np.zeros(p1), p2])
-        n = len(lk_array)
-        lk_array = np.concatenate([lk_array, np.zeros(1001 - n)])
+        lk_array = _return_lk(likelihoods, dist, last_mark, curr_mark, max_len=1001)
         prior_array = bayes_dict["Prior"]
         bayes_dict[dist] = bayes_iter(prior=prior_array, likelihood=lk_array)
         bayes_dict["Prior"] = bayes_dict[dist]
 
-    # bayes_dict["Posterior"] = bayes_dict[runner_info[-1][0]]
+    bayes_dict["Posterior"] = bayes_dict[marks[-1]]
 
     bayes_dict.pop("Prior")
     bayes_dict = {k: v[::2] for k, v in bayes_dict.items()}
@@ -84,12 +81,11 @@ if __name__ == '__main__':
     lks = main_lk(df=data, marks_list=marks, store=False, process=False)
     people = round_df(get_test_set(df), marks)
 
+    uninformed_prior = _prior_dist(informed=False, max_time=max_finish)
     for i in range(len(people[:3001])):
         person_info = people.iloc[i]
         informed_prior = _prior_dist(informed=True, max_time=max_finish)
         dict1 = person_dict(person=person_info, checkpoints=marks, prior=informed_prior, lk_tables=lks)[0]
-
-        uninformed_prior = _prior_dist(informed=False, max_time=max_finish)
         dict2 = person_dict(person=person_info, checkpoints=marks, prior=uninformed_prior, lk_tables=lks)[0]
 
         if i % 1000 == 0:
