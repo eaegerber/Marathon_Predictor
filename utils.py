@@ -68,31 +68,72 @@ def fit_model(data: pd.Series, model: rv_continuous, plot_range: tuple = (120, 3
     plt.plot(x, d.pdf(x), color="orange")
 
 
-def get_training_set(people: pd.DataFrame):
+def get_train_set(people: pd.DataFrame, zero_k: bool = False):
     """Return people from before this year"""
-    return people[people["Year"] != 2023]
+    if zero_k:
+        people["0K"] = 0
+
+    people_info = people[["Name", "Age", "M/F"]]
+    marks_ls = _get_marks(marks_list=None, zero_k=zero_k, finish=True)
+    people = people[people["Year"] != 2023]
+    people_array = (np.array(people[marks_ls]) / 60).round(2)
+    return people_array, people_info
 
 
-def get_test_set(people: pd.DataFrame):
+def get_test_set(people: pd.DataFrame, zero_k: bool = False):
     """Return people from this year"""
-    return people[people["Year"] == 2023]
+    if zero_k:
+        people["0K"] = 0
+
+    people_info = people[["Name", "Age", "M/F"]]
+    marks_ls = _get_marks(marks_list=None, zero_k=zero_k, finish=True)
+    people = people[people["Year"] == 2023]
+    people_array = (np.array(people[marks_ls]) / 60).round(2)
+    return people_array, people_info
 
 
-def store_initial_prior(data: pd.DataFrame, max_time: int = 500, path: str = "processed_data/informed_prior.csv"):
+def store_initial_prior(finish: np.array, max_time: int = 500, path: str = "processed_data/informed_prior.csv"):
     """Store the initial prior distribution from data in a file"""
-    counts = {int(2 * k): v for k, v in (((data["Finish Net"] + 15) // 30) / 2).value_counts().to_dict().items()}
-    # counts = dict(data["Finish Net"].value_counts())
+    # counts = dict((data["Finish Net"] // 60).value_counts())
+    counts = dict(enumerate(np.bincount(finish.astype(int))))
     counts = [counts[idx] if idx in counts.keys() else 0 for idx in range(max_time)]
     prior = np.array(counts) / sum(counts)
     prior.tofile(path, sep=',')
     return prior
 
 
-def round_df(secs_df: pd.DataFrame, marks_list: list):
-    secs_df = secs_df.copy()
-    secs_df[marks_list] = (((secs_df[marks_list] + 15) // 30) / 2)
-    secs_df["Finish Net"] = secs_df["Finish Net"] // 60
-    return secs_df
+def _prior_dist(informed: bool = True, max_time: int = 500) -> np.array:
+    """Returns the prior distribution for the runner as a numpy array"""
+    if informed:
+        prior = np.loadtxt("processed_data/informed_prior.csv", delimiter=',')
+    else:
+        prior = np.ones(max_time) / max_time
+
+    return prior
+
+
+def _get_marks(marks_list: Union[list, None], zero_k: bool = False, finish: bool = False):
+    """Order and return the subset of marks specified in marks_list"""
+    all_marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
+    if not marks_list:
+        marks_list = all_marks
+    marks_ls = [m for m in all_marks if m in marks_list]
+    if zero_k and marks_ls[0] != "0K":
+        marks_ls = ["0K"] + marks_list
+    if finish:
+        marks_ls = marks_ls + ["Finish Net"]
+    return marks_ls
+
+
+def _get_intersection(a1, a2) -> np.array:
+    if len(a1) == 286777:
+        return a2
+    if len(a2) == 286777:
+        return a1
+    if len(a1) < len(a2):
+        return a1.intersection(a2)
+    else:
+        return a1.intersection(a2)
 
 
 if __name__ == '__main__':
@@ -102,6 +143,7 @@ if __name__ == '__main__':
     data_series = df["Finish Net"]
 
     plot_dist(data=df, checkpoint="Finish Net", ticks=(120, 240, 423), save="plot_dist2")
+    plot_dist(data=df, checkpoint="Finish Net", ticks=[60 * x for x in range(10)], save="plot_dist")
     # plot_dist(data=df, checkpoint="5K", ticks=(30, 60, 120), save="plot_dist")
     fit_model(data_series, model=norm, plot_range=(data_series.min(), data_series.max()))
     plt.show()

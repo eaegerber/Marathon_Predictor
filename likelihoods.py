@@ -1,150 +1,64 @@
 
-# likelihoods.py: store, process, and read in level 1 or level 2 likelihoods
-
-import json
 import numpy as np
 import pandas as pd
-from utils import get_training_set
+import matplotlib.pyplot as plt
+from utils import get_train_set, _get_intersection
 
 
-def new_fix_df(old_data: pd.DataFrame, last_dist, last_fix, curr_dist, curr_fix, fin_fix):
-    """"""
-    labels = {0: 0.5, 15: 0.25, 30: 0, 45: -0.25, 60: -0.5}
-    marks_list = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
-    new_data = old_data.copy()
-    new_data["0K"] = 0
-    new_data[last_dist] = ((new_data[last_dist] + last_fix) // 60) + labels[last_fix]
-    new_data[curr_dist] = ((new_data[curr_dist] + curr_fix) // 60) + labels[curr_fix]
-    new_data["Finish Net"] = ((new_data["Finish Net"] + fin_fix) // 60) + labels[fin_fix]
-    new_data = new_data[["0K"] + marks_list + ["Finish Net"]].round(2).astype(str)
-    return new_data
+def get_s2_dict(fin_data: np.array, bin_mapping: np.array, max_len: int = 500):
+    """
+    Return dictionary used to precompute part of likelihood calculation
+    :param fin_data: array of finish times from train_data
+    :param bin_mapping: mapping of each finish time to a bin size
+    :return dict - {finish_time: [indexes of train_data where finish_time w/i bin size
+    """
+    mapping = {i: np.where(abs(fin_data - i) < bin_mapping[i])[0] for i in range(max_len)}
+    return {k: set(v) for k, v in mapping.items() if v.shape[0] > 0}
 
 
-def add_to_lk(old_data: pd.DataFrame, last_fix, curr_fix, fin_fix, all_lks: dict = {}):
-    """Add likelihoods to dict using a different binning for the data df"""
-    last_dict = {"5K": "0K", "10K": "5K", "15K": "10K", "20K": "15K", "HALF": "20K",
-                 "25K": "HALF", "30K": "25K", "35K": "30K", "40K": "35K"}
-    for dist, last_dist in last_dict.items():
-        fixed_df = new_fix_df(
-            old_data=old_data, last_dist=last_dist, last_fix=last_fix,
-            curr_dist=dist, curr_fix=curr_fix, fin_fix=fin_fix
-        )
-        counts_data = fixed_df.groupby([last_dist, dist, "Finish Net"]).size().reset_index().values
-        for last_mark, mark, fin, count in counts_data:
-            last_mark, mark, fin, count = str(last_mark), str(mark), str(fin), str(count)
-            if dist not in all_lks.keys():
-                all_lks[dist] = {}
-            if last_mark not in all_lks[dist].keys():
-                all_lks[dist][last_mark] = {}
-            if fin not in all_lks[dist][last_mark].keys():
-                all_lks[dist][last_mark][fin] = {}
-            all_lks[dist][last_mark][fin][mark] = count
-
-    return all_lks
-
-
-def _array_for_finish(group: pd.DataFrame, bound):
-    # indexes = np.linspace(0, bound, 2 * bound + 1)
-    lks = np.zeros(2 * bound + 1)
-
-    for fin, mar, lk in group.values:
-        lks[int(fin * 2)] = lk
-
-    first = np.nonzero(lks)[0][0]
-    return np.concatenate([[first], np.trim_zeros(lks)])
-
-
-def process_lks(filename: str = "likelihoods/all_likelihoods.json"):
-    """Process the stored likelihoods"""
-    with open(filename) as file:
-        dct = json.load(file)
-
-    print('processing lks...')
-    new_dict = {}
-    for dist in dct.keys():
-        new_dict[dist] = {}
-        for last_mark in dct[dist].keys():
-            counts_table = []
-            for finish in dct[dist][last_mark].keys():
-                for mark, count in dct[dist][last_mark][finish].items():
-                    counts_table.append([finish, mark, count])
-
-            counts = pd.DataFrame(counts_table, columns=["Fin", "Mar", "Lks"]).astype(float)
-            counts["Lks"] = counts.groupby("Fin")["Lks"].transform(lambda x: x / x.sum())
-            bound = int((counts["Fin"].max() + 1) // 1)
-            c = counts.groupby("Mar").apply(lambda x: _array_for_finish(x, bound))
-
-            last_mark = str(float(last_mark))
-            new_dict[dist][last_mark] = {k: list(v) for k, v in c.to_dict().items()}
-        print('processed: ', dist)
-    for dist, dct in new_dict.items():
-        filename = f"likelihoods/likelihoods_{dist}.json"
-        with open(filename, "w") as file:
-            json.dump(dct, file)
-        print('loaded: ', dist)
-
-    return
-
-
-def read_likelihoods(marks_list: list):
-    """Read in dict from file for each mark"""
-    new_dict = {}
-    for dist in marks_list:
-        with open(f"likelihoods/likelihoods_{dist}.json") as file:
-            new_dict[dist] = json.load(file)
-
-    return new_dict
-
-
-def main_lk(
-        df: pd.DataFrame,
-        marks_list: list,
-        filename: str = "likelihoods/all_likelihoods.json",
-        store: bool = True,
-        process: bool = True,
+def get_likelihood(
+        data: np.array, last_dist: str, last_mark: float, curr_dist: str, curr_mark: float,
+        bin_mapping: np.array, col_mapping: np.array, s2: np.array,
 ):
-    if store:
-        print("storing lks...")
-        all_lks = {}
-        for last_fix in [30, 0]:
-            for curr_fix in [30, 0]:
-                for fin_fix in [30]:
-                    all_lks = add_to_lk(
-                        old_data=df, last_fix=last_fix, curr_fix=curr_fix,
-                        fin_fix=fin_fix, all_lks=all_lks
-                    )
-                    print('added: ', last_fix, curr_fix, fin_fix)
+    """Return the likelihood array for a given `last_mark` and  `curr_mark`."""
+    s1 = _subset_data(data=data, col_num=col_mapping[last_dist], mark=last_mark, diff=bin_mapping[round(last_mark)])
+    s3 = _subset_data(data=data, col_num=col_mapping[curr_dist], mark=curr_mark, diff=bin_mapping[round(curr_mark)])
+    lk_num, lk_den = np.zeros(500), np.zeros(500)
 
-        with open(filename, "w") as file:
-            json.dump(all_lks, file)
+    for fin, indexes in s2.items():
+        given = _get_intersection(s1, indexes)  # denominator
+        if len(given) != 0:
+            lk_num[fin] = len(_get_intersection(given, s3))
+            lk_den[fin] = len(given)
 
-        print('stored lks')
-    if process:
-        process_lks()
-
-    all_lks = read_likelihoods(marks_list)
-    return all_lks
+    lks = np.divide(lk_num, lk_den, out=np.zeros(500), where=lk_den != 0)
+    lks[np.isnan(lks)] = 0
+    return lks
 
 
-def _return_lk(
-        lk_dict: dict,
-        dist: str,
-        last_mark: str,
-        curr_mark: str,
-        max_len: int = 1001,
-):
-    """Return the likelihood array from the dictionary"""
-    last_lk = lk_dict[dist].get(last_mark, {})
-    lk_array = last_lk.get(curr_mark, np.ones(1001))
+def _subset_data(data: np.array, col_num: int, mark: float, diff: int):
+    """Subset dataframe, return set of all indexes close to mark"""
+    return set(np.argwhere(abs(data[:, col_num] - mark) < diff).ravel())
+    # return set(np.where(abs(data[:, col_num] - mark) < diff)[0])  # list of indexes satisfying
 
-    array1 = np.zeros(int(lk_array[0]))
-    array2 = np.array(lk_array[1:])
-    array3 = np.zeros(max_len - len(array1) - len(array2))
-    return np.concatenate([array1, array2, array3])
+
+# def get_mapping(arr, max_len=500, sm=0.01, f=2, p=2):
+#     x = np.array(range(max_len))
+#     y1 = np.bincount(arr // 60, minlength=max_len)[:max_len]
+#     y2 = y1 / y1.sum()
+#     y = (y2 + sm) / (y2 + sm).sum()
+#     return f * (x / (100_000 * y)) ** p
 
 
 if __name__ == '__main__':
-    data = get_training_set(pd.read_csv("processed_data/full_data_secs.csv"))  # data = quals
-    marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
-    lks = main_lk(df=data, marks_list=marks, store=True, process=True)
+    df = pd.read_csv("processed_data/full_data_secs.csv")
+    train_data, train_info = get_train_set(df, zero_k=True)
+    m = ["0K", "5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K", "Finish Net"]
+    col_map = {dist: num for num, dist in enumerate(m)}
+    bin_map = np.ones(500)
+    s2_matrix = get_s2_dict(train_data[:, -1], bin_mapping=np.ones(500), max_len=500)
+    lk = get_likelihood(data=train_data, last_dist="5K", last_mark=24, curr_dist="10K",
+                        curr_mark=48, bin_mapping=bin_map, col_mapping=col_map, s2=s2_matrix)
+    plt.plot(lk)
+    plt.show()
     print('done')
