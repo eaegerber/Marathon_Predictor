@@ -78,7 +78,7 @@ if __name__ == '__main__':
     for i, row in enumerate(test_data):
         informed_prior = _prior_dist(informed=True, max_time=max_finish)
         dict1 = person_dict(person=row, marks=marks, prior=informed_prior, lk_data=train_data, s2=s2_matrix)[0]
-        # dict2 =person_dict(person=row, marks=marks_w_fin, prior=uninformed_prior, dtable=pdata, s2=s2_matrix)[0]
+        # dict2 = person_dict(person=row, marks=marks_w_fin, prior=uninformed_prior, dtable=pdata, s2=s2_matrix)[0]
         print(i, test_info.iloc[i]["Name"])
         if i == 100:
             break
