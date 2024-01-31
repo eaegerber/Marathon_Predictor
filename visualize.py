@@ -60,7 +60,7 @@ def plot_bayes_dict(
         plot_range: Union[int, None] = None,
 ):
     """Plot the bayes predictions for a given runner"""
-    plt.figure(figsize=(12, 10))
+    fig = plt.figure(figsize=(12, 10))
 
     plt.set_cmap(cmap_str)
     colors = plt.get_cmap()(np.linspace(0.2, 0.8, len(show_list)))
@@ -88,33 +88,30 @@ def plot_bayes_dict(
     if isinstance(actual, int):
         plt.vlines(actual, 0, 1, linestyles="dashed", color="black", label="actual")
 
-    if isinstance(save, str):
-        plt.savefig(f"plots/Plot: {save}.png", facecolor='w')
+    return fig
+    # if isinstance(save, str):
+    #     plt.savefig(f"plots/Plot: {save}.png", facecolor='w')
 
-    plt.close()
+
+    # plt.close()
 
 
-def plot_from_data(data: dict, name: str, marks: list, prior, lk_data, s2):
+
+def plot_from_data(data: dict, name: str, marks: list, prior, lk_data, s2, plot_range: int = 40):
     if "0K" not in data.keys():
         data["0K"] = 0
     m = [m for m in marks if m in data.keys()]
     table = full_bayes_dict(data, prior, lk_data, s2)
-    plot_bayes_dict(bayes_dict=table, show_list=m, save=f"test",
-                    actual=table["Posterior"].argmax(), plot_range=30, cmap_str="inferno")
+    plot_bayes_dict(bayes_dict=table, show_list=m, save=name,
+                    actual=table["Posterior"].argmax(),
+                    plot_range=plot_range, cmap_str="inferno")
+                    
     return
 
 
 if __name__ == '__main__':
-    max_finish = 500
-    df = pd.read_csv("processed_data/full_data_secs.csv")
-    train_data, train_info = get_train_set(df, zero_k=True)
-    store_initial_prior(finish=train_data[:, -1] // 1, max_time=max_finish)
-    s2_matrix = get_s2_dict(train_data[:, -1], bin_mapping=np.ones(500), max_len=500)
-    marks = _get_marks(marks_list=None, zero_k=True, finish=False)
-    marks_w_fin = _get_marks(marks_list=marks, zero_k=True, finish=True)
-
-    df = pd.read_csv("processed_data/nucr_runners.csv")
-    test_data, test_info = get_test_set(df, zero_k=True)  # df = pd.read_csv("processed_data/nucr_runners.csv")
+    test_str = "processed_data/nucr_runners.csv"
+    train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize(test_file=test_str)
     print("start")
     uninformed_prior = _prior_dist(informed=False, max_time=max_finish)
     for i, row in enumerate(test_data):
@@ -129,5 +126,6 @@ if __name__ == '__main__':
         plot_bayes_dict(bayes_dict=dict1, show_list=marks, save=f"{test_info.iloc[i]['Name']}",
                         actual=int(row[-1]), plot_range=60, cmap_str="inferno")
 
-    testing = {"5K": 20, "10K": 40, "15K": 519}
-    # plot_from_data(testing, name="test", marks=marks, prior=informed_prior, lk_data=train_data, s2=s2_matrix)
+    testing = {"5K": 20.1, "10K": 40.2, "15K": 59.3}
+    plot_from_data(testing, name="Test, Brandon", marks=marks, prior=uninformed_prior,
+                   lk_data=train_data, s2=s2_matrix, plot_range=40)

@@ -2,13 +2,11 @@
 import numpy as np
 import time
 import pandas as pd
-from collections import defaultdict
 from typing import Union
-from bayes_model import _prior_dist, person_dict
-from likelihoods import main_lk
-from utils import get_training_set, get_test_set, round_df
+from collections import defaultdict
+from bayes_model import _prior_dist, person_dict, initialize
 import matplotlib.pyplot as plt
-from gmm import quals, quals_test
+# from gmm import quals_train, quals_test
 
 
 def percentile(arr: np.array, q: float):
@@ -33,34 +31,38 @@ def interval_size(arr: np.array,  conf: float = 0.95):
     return upper - lower
 
 
-def _val_median(bayes_table: pd.DataFrame, person_actual: int, dist: str = "5K"):
-    bayes_array = bayes_table[dist]
+def _val_median(bayes_table: pd.DataFrame, person_actual: int, dst: str, mark: float):
+    bayes_array = bayes_table[dst]
     return percentile(bayes_array, q=0.5) - person_actual
 
 
-def _val_mode(bayes_table: pd.DataFrame, person_actual: int, dist: str = "5K"):
-    bayes_array = bayes_table[dist]
+def _val_mode(bayes_table: pd.DataFrame, person_actual: int, dst: str, mark: float):
+    bayes_array = bayes_table[dst]
     return np.argmax(bayes_array) - person_actual
 
 
-def _val_conf_lists(bayes_table: pd.DataFrame, person_actual: int, dist: str = "5K"):
-    bayes_array = bayes_table[dist]
+def _val_mean(bayes_table: pd.DataFrame, person_actual: int, dst: str, mark: float):
+    bayes_array = bayes_table[dst]
+    return (np.dot(bayes_array, range(bayes_array.shape[0])) // 1) - person_actual
+
+
+def _val_def(bayes_table: pd.DataFrame, person_actual: int, dst: str, mark: float):
+    adjust = {"5K": 42.195 / 5, "10K": 42.195 / 10, "15K": 42.195 / 15, "20K": 42.195 / 20, "HALF": 2,
+              "25K": 42.195 / 25, "30K": 42.195 / 30, "35K": 42.195 / 35, "40K": 42.195 / 40}
+    mult = adjust[dst]
+    return ((mark * mult) // 1) - person_actual
+
+
+def _val_conf_lists(bayes_table: pd.DataFrame, person_actual: int, dst: str, mark: float):
+    bayes_array = bayes_table[dst]
     conf_levels = [.5, .9, .95]
     return [in_interval(bayes_array, actual=person_actual, conf=c) for c in conf_levels]
 
 
-def _val_conf_lens(bayes_table: pd.DataFrame, person_actual: int, dist: str = "5K"):
-    bayes_array = bayes_table[dist]
+def _val_conf_lens(bayes_table: pd.DataFrame, person_actual: int, dst: str, mark: float):
+    bayes_array = bayes_table[dst]
     conf_levels = [.5, .9, .95]
     return [interval_size(bayes_array,  conf=c) for c in conf_levels]
-
-
-def _get_default_error_counts(df: pd.DataFrame, dist: str = "5K",):
-    adjust = {"5K": 42.195/5, "10K": 42.195/10, "15K": 42.195/15, "20K": 42.195/20, "HALF": 2,
-              "25K": 42.195/25, "30K": 42.195/30, "35K": 42.195/35, "40K": 42.195/40}
-    default_error = (((df[dist] * adjust[dist]) - df["Finish Net"]) // 60).astype(int)
-    default_error_counts = (default_error.value_counts() / len(default_error)).rename("default")
-    return default_error_counts
 
 
 def _get_model_error_counts(error_list: pd.DataFrame):
@@ -81,10 +83,11 @@ def _comparison_table(
 
     if isinstance(save, str):
         plt.plot(all_errors, label=all_errors.columns)
-        plt.xlabel("Range of Error")
-        plt.ylabel("Proportion of People Correctly Predicted")
-        plt.title(f"Comparison over {dist}")
+        plt.xlabel("Error: Predicted - Actual (mins)")
+        plt.ylabel("Proportion of People")
+        plt.title(f"Prediction Error Comparison: {dist}")
         plt.xlim(-40, 40)
+        plt.grid()
         plt.legend()
         plt.savefig(save)
         plt.clf()
@@ -93,28 +96,29 @@ def _comparison_table(
 
 
 def run_all_analyses(
-        people_data: pd.DataFrame,
+        test_df: np.array,
         functions: dict,
         marks: list,
-        lk_dict: dict,
+        lk_data: np.array,
         informed=True,
         max_finish: int = 500
 ):
     good_data = []
     result_dict = {name: defaultdict(list) for name, func in functions.items()}
-    # prior = _prior_dist(informed=informed, max_time=max_finish)
-    prior = _prior_dist(informed=True, max_time=1001)
-    for i in range(len(people_data)):
+    prior = _prior_dist(informed=True, max_time=max_finish)
+    for i, row in enumerate(test_df):
         try:
-            person_info = people.iloc[i]
-            table, actual = person_dict(person=person_info, checkpoints=marks, prior=prior, lk_tables=lk_dict)
-            for mark in marks:
+            person_info = row
+            table, actual = person_dict(person=row, marks=marks, prior=prior, lk_data=lk_data, s2=s2_matrix)
+            for j, dis in enumerate(marks):
+                if dis == "0K":
+                    continue
                 for func_name, func in functions.items():
-                    val = func(table, actual, mark)
-                    result_dict[func_name][mark].append(val)
+                    val = func(table, actual // 1, dis, row[j])
+                    result_dict[func_name][dis].append(val)
 
             good_data.append(person_info)
-            if i % 1000 == 0:
+            if i % 100 == 0:
                 print('inside', i)
         except:
             print('failed', i)
@@ -124,69 +128,65 @@ def run_all_analyses(
 
 
 if __name__ == "__main__":
-    s = time.time()
-    max_fin = 1001
-    train = get_training_set(pd.read_csv("processed_data/full_data_secs.csv"))  # quals
-    train = train[train["Finish Net"] // 60 < 360]
-
-    # train = train[train["M/F"] == "M"]
-    marks = checkpoints = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
-    df = pd.read_csv("processed_data/full_data_secs.csv")  # quals_test  #
-    people = round_df(get_test_set(df), marks)
-    # people = people[people["M/F"] == "M"]
-    lks = main_lk(df=train, marks_list=marks, store=False, process=False)
-
-    print('load likelihoods:', time.time() - s)
+    f = time.time()
+    sample_size = 2000
+    train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize()
+    # test_sample = test_data[np.random.choice(range(test_data.shape[0]), sample_size)]
     results, good_data = run_all_analyses(
-        people_data=people,
+        test_df=test_data,
         functions={
             "median": _val_median,
             "mode": _val_mode,
+            "mean": _val_mean,
+            "def": _val_def,
             "confs": _val_conf_lists,
             "conf_lens": _val_conf_lens},
-        marks=checkpoints,
-        lk_dict=lks,
+        marks=marks,
+        lk_data=train_data,
         informed=True,
-        max_finish=max_fin,
+        max_finish=max_finish,
     )
-    print(len(people))
 
+    marks = marks[1:]
     pd.DataFrame({m: pd.DataFrame(results['conf_lens'][m])[0] for m in marks}).to_csv('analysis/conf_lens_50.csv')
     pd.DataFrame({m: pd.DataFrame(results['conf_lens'][m])[1] for m in marks}).to_csv('analysis/conf_lens_90.csv')
     pd.DataFrame({m: pd.DataFrame(results['conf_lens'][m])[2] for m in marks}).to_csv('analysis/conf_lens_95.csv')
-    abs(pd.DataFrame({m: results["mode"][m] for m in marks})).to_csv('mode.csv')
-    abs(pd.DataFrame({m: results["median"][m] for m in marks})).to_csv('median.csv')
+    abs(pd.DataFrame({m: results["mode"][m] for m in marks})).to_csv('analysis/mode.csv')
+    abs(pd.DataFrame({m: results["median"][m] for m in marks})).to_csv('analysis/median.csv')
+    abs(pd.DataFrame({m: results["mean"][m] for m in marks})).to_csv('analysis/mean.csv')
 
     mode_df = pd.DataFrame({mark: pd.Series(error_list) for mark, error_list in results["mode"].items()})
     median_df = pd.DataFrame({mark: pd.Series(error_list) for mark, error_list in results["median"].items()})
-
-    print(time.time() - s)
-    # mode_t = comparison_table(people2, mode_df, "5K", save="Compare5KMode.png")
+    mean_df = pd.DataFrame({mark: pd.Series(error_list) for mark, error_list in results["mean"].items()})
+    def_df = pd.DataFrame({mark: pd.Series(error_list) for mark, error_list in results["def"].items()})
 
     conf_table = pd.DataFrame([pd.DataFrame(results["confs"][i]).sum() / len(results['confs'][i]) for i in marks])
 
-    mode_err_probs = pd.DataFrame({m: mode_df[m].value_counts().sort_index() / mode_df[m].count() for m in mode_df.columns}).fillna(0)
-    median_err_probs = pd.DataFrame({m: median_df[m].value_counts().sort_index() / median_df[m].count() for m in median_df.columns}).fillna(0)
+    mode_err_probs = pd.DataFrame(
+        {m: mode_df[m].value_counts().sort_index() / mode_df[m].count() for m in mode_df.columns}).fillna(0)
+    median_err_probs = pd.DataFrame(
+        {m: median_df[m].value_counts().sort_index() / median_df[m].count() for m in median_df.columns}).fillna(0)
+    mean_err_probs = pd.DataFrame(
+        {m: mean_df[m].value_counts().sort_index() / mean_df[m].count() for m in mean_df.columns}).fillna(0)
+    def_err_probs = pd.DataFrame(
+        {m: def_df[m].value_counts().sort_index() / def_df[m].count() for m in def_df.columns}).fillna(0)
     # mode_err_count = pd.DataFrame({m: mode_df[m].value_counts().sort_index() for m in mode_df.columns}).fillna(0).astype(int)
 
-    for dist in marks:
-        d2 = get_test_set(df)
-        d2 = d2[d2["M/F"] == "M"]
-        def_probs = _get_default_error_counts(d2, dist)
+    for i, dist in enumerate(marks):
+        if dist == "0K":
+            continue
         mode_probs = mode_err_probs[dist]
         median_probs = median_err_probs[dist]
+        mean_probs = mean_err_probs[dist]
+        def_probs = def_err_probs[dist]
         _comparison_table(
-            error_counts_lists={"def": def_probs, "mode": mode_probs, "median": median_probs},
-            dist="5K",
-            save=f"CompareAll{dist}.png"
+            error_counts_lists={
+                "def": def_probs,
+                "mode": mode_probs,
+                "median": median_probs,
+                "mean": mean_probs},
+            dist=dist,
+            save=f"analysis/Compare{dist}.png"
         )
-    print('f')
-
-# pd.DataFrame(person_dict(person=good_data.iloc[25709], checkpoints=marks, prior=_prior_dist(informed=True, max_time=500), lk_tables=lks)[0])
-# person_dict(person=people.iloc[231], checkpoints=marks, prior=_prior_dist(informed=True, max_time=500), lk_tables=lks)[1]
-
-
-# test = pd.DataFrame({'mode_diff': results["mode"]["5K"], '5K_bin': good_data["5K"], 'Fin': good_data["Finish Net"], 'pred': good_data["5K"] * 42.195 / 5})
-# test["mode_pred"] = test["mode_diff"] + test["Fin"]
-# test.groupby("5K_bin")[["mode_diff", "mode_pred", "Fin"]].agg(["mean", "count"])
-
+    print('f', time.time() - f)
+    print('a')

@@ -63,22 +63,32 @@ def person_dict(
     return bayes_dict, actual
 
 
-if __name__ == '__main__':
-    max_finish = 500
-    df = pd.read_csv("processed_data/full_data_secs.csv")
-    train_data, train_info = get_train_set(df, zero_k=True)
-    store_initial_prior(finish=train_data[:, -1] // 1, max_time=max_finish)
-    s2_matrix = get_s2_dict(train_data[:, -1], bin_mapping=np.ones(500), max_len=500)
-    marks = _get_marks(marks_list=None, zero_k=True, finish=False)
-    marks_w_fin = _get_marks(marks_list=marks, zero_k=True, finish=True)
+def initialize(
+        train_file="processed_data/full_data_secs.csv",
+        test_file="processed_data/full_data_secs.csv",
+        max_fin: int = 500,
+        store_prior: bool = True,
+):
+    """Initialize data, marks, and s2_mat"""
+    train_df = pd.read_csv(train_file)
+    train_data, train_info = get_train_set(train_df, zero_k=True)
 
-    test_data, test_info = get_test_set(df, zero_k=True)  # df = pd.read_csv("processed_data/nucr_runners.csv")
+    if store_prior:
+        store_initial_prior(finish=train_data[:, -1] // 1, max_time=max_fin)
+    s2_mat = get_s2_dict(train_data[:, -1], bin_mapping=np.ones(500), max_len=500)
+    mks = _get_marks(marks_list=None, zero_k=True, finish=False)
+    test_df = pd.read_csv(test_file)
+    test_data, test_info = get_test_set(test_df, zero_k=True)
+    return train_data, train_info, test_data, test_info, mks, s2_mat, max_fin
+
+
+if __name__ == '__main__':
+    train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize()
     uninformed_prior = _prior_dist(informed=False, max_time=max_finish)
     print("start")
     for i, row in enumerate(test_data):
         informed_prior = _prior_dist(informed=True, max_time=max_finish)
         dict1 = person_dict(person=row, marks=marks, prior=informed_prior, lk_data=train_data, s2=s2_matrix)[0]
-        # dict2 = person_dict(person=row, marks=marks_w_fin, prior=uninformed_prior, dtable=pdata, s2=s2_matrix)[0]
         print(i, test_info.iloc[i]["Name"])
         if i == 100:
             break

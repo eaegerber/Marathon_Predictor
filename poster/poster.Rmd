@@ -1,0 +1,81 @@
+---
+title: "Quantifying Uncertainty in Marathon Finish Time Predictions - A Bayesian Approach to Live Marathon Estimates"
+titlebox_borderwidth: "2cm"
+titlebox_bordercol: "#008080"
+author:
+  - name: Brandon Onyejekwe
+    affil: 1
+affiliation:
+  - num: 1
+    address: Undergraduate Data Science Major, Northeastern University
+column_numbers: 3
+output: 
+  posterdown::posterdown_html:
+    self_contained: false
+bibliography: packages.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+
+In the middle of a marathon, expected finish times are traditionally estimated by naively extrapolating the average pace covered so far, assuming it will be held constant for the rest of the race. Making predictions like this causes two issues: (1) the estimates do not consider context occurring within the race that can determine if a runner is likely to finish much slower or faster than expected, and (2) the prediction is a single point estimate with no information about uncertainty. A Bayesian inference model addresses both concerns by using the runner's previous splits in the race to generate a probability distribution of possible finish times, using conditional probability and empirical likelihood estimates. In this project, a Bayesian model is evaluated in comparison to the traditional estimate method.
+
+# Methods
+
+## Data
+
+We scraped the data for this project from the Boston Athletic Association website. It contains a runner's name, age, gender, the intermediate splits of their race (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K) as well as their finish time. The splits and finish times are recorded in seconds. The data includes every finishing runner from each Boston Marathon from 2009-2023, resulting in 312805 rows of data. The data was partitioned into two groups: a training set (286777 runners from 2009-2022) and a test set (26028 runners from 2023). 
+
+## Model
+
+The model utilizes Bayes theorem to iteratively update the posterior finish time distribution according to the following general equation: 
+
+`P(finish | current_split, previous_splits) ∝ P(current_split | finish, previous_splits) * P(finish | previous_splits)`. 
+
+In this equation, the posterior distribution is the normalized product of the likelihood distribution and the prior distribution. 
+
+
+# Results
+
+Usually you want to have a nice table displaying some important results that you have calculated. In `posterdown` this is as easy as using the `kable` table formatting you are probably use to as per typical R Markdown formatting.
+
+You can reference tables like so: Table \@ref(tab:mytable). Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam placerat augue at velit tincidunt semper. Donec elementum porta posuere. Nullam interdum, odio at tincidunt feugiat, turpis nisi blandit eros, eu posuere risus felis non quam. Nam eget lorem odio. Duis et aliquet orci. Phasellus nec viverra est.
+
+```{r mytable, out.width='80%'}
+knitr::kable(iris[1:10, 1:4], caption = 'Table caption.',align = 'c',"html")
+```
+
+Or with figures: Figure \@ref(fig:standard-plot), or Figure \@ref(fig:morefigs).
+
+```{r standard-plot, out.width='80%', fig.align='center', fig.cap='Great figure!', fig.height=5}
+plot(mtcars[1:2])
+```
+
+```{r morefigs, out.width='80%', echo=TRUE, fig.cap='Amazing, right?!', fig.height=5}
+data <- iris
+
+plot(x = data$Sepal.Length, 
+     y = data$Sepal.Width, 
+     col = data$Species,
+     pch = 19, 
+     xlab = "Sepal Length (cm)",
+     ylab = "Sepal Width (cm)")
+
+```
+
+# Next Steps
+
+Aliquam sed faucibus risus, quis efficitur erat. Vestibulum semper mauris quis tempus eleifend. Aliquam sagittis dictum ipsum, quis viverra ligula eleifend ut. Curabitur sagittis vitae arcu eget faucibus. In non elementum felis. Duis et aliquam nunc. Nunc pulvinar sapien nunc, vel pretium nisi efficitur in. Fusce fringilla maximus leo et maximus. Fusce at ligula laoreet, iaculis mi at, auctor odio. Praesent sed elementum justo. Aenean consectetur risus rhoncus tincidunt efficitur. Praesent dictum mauris at diam maximus maximus [@R-posterdown].
+
+# Conclusion
+
+Try `posterdown` out! Hopefully you like it!
+
+```{r, include=FALSE}
+knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')
+```
+
+# References
