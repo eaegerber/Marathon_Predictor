@@ -65,7 +65,7 @@ def plot_bayes_dict(
     plt.set_cmap(cmap_str)
     colors = plt.get_cmap()(np.linspace(0.2, 0.8, len(show_list)))
 
-    if (isinstance(plot_range, int)) and (isinstance(actual, int)):
+    if (isinstance(plot_range, int)) and (isinstance(actual, int)):  # TODO fix
         bayes_dict = {k: v[actual - plot_range: actual + plot_range + 1] for k, v in bayes_dict.items()}
         bayes_dict['index'] = range(actual - plot_range, actual + plot_range + 1)
     else:
@@ -88,10 +88,9 @@ def plot_bayes_dict(
     if isinstance(actual, int):
         plt.vlines(actual, 0, 1, linestyles="dashed", color="black", label="actual")
 
-    return fig
     # if isinstance(save, str):
     #     plt.savefig(f"plots/Plot: {save}.png", facecolor='w')
-
+    return fig
 
     # plt.close()
 
@@ -103,7 +102,7 @@ def plot_from_data(data: dict, name: str, marks: list, prior, lk_data, s2, plot_
     m = [m for m in marks if m in data.keys()]
     table = full_bayes_dict(data, prior, lk_data, s2)
     plot_bayes_dict(bayes_dict=table, show_list=m, save=name,
-                    actual=table["Posterior"].argmax(),
+                    actual=int(table[list(data.keys())[-2]].argmax()),
                     plot_range=plot_range, cmap_str="inferno")
                     
     return

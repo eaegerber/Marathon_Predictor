@@ -1,78 +1,102 @@
 ---
-title: "Quantifying Uncertainty in Marathon Finish Time Predictions - A Bayesian Approach to Live Marathon Estimates"
-titlebox_borderwidth: "2cm"
-titlebox_bordercol: "#008080"
+title: "Quantifying Uncertainty in Marathon Finish Time Predictions"
+titlebox_borderwidth: "0.5cm"
+poster_height: "24in"
+poster_width: "36in"
 author:
   - name: Brandon Onyejekwe
-    affil: 1
+  - name: Eric Gerber
 affiliation:
-  - num: 1
-    address: Undergraduate Data Science Major, Northeastern University
-column_numbers: 3
+    address: Khoury College of Computer Sciences, Northeastern University
+title_textsize: "75pt"
+affiliation_textsize: "35pt"
+logoright_name: ./logo.jpg
+column_numbers: 4
+columnline_width: "1mm"
+column_margins: "0.5in"
+body_textsize: "42px"
+# primary_colour: "#A4804A" 
 output: 
   posterdown::posterdown_html:
     self_contained: false
 bibliography: packages.bib
 ---
 
+<!--
+```{css, echo=FALSE}
+div.title_container{
+   background-color: #C8102E;
+}
+
+div.logo_left{
+  background-color: #A4804A;
+}
+div.logo_right{
+  background-color: #A4804A;
+}
+```
+-->
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
 # Introduction
+In the middle of a marathon, expected finish times are typically estimated by naively extrapolating the average pace covered so far, assuming it will be held constant for the rest of the race. These predictions have two major issues:
 
-In the middle of a marathon, expected finish times are traditionally estimated by naively extrapolating the average pace covered so far, assuming it will be held constant for the rest of the race. Making predictions like this causes two issues: (1) the estimates do not consider context occurring within the race that can determine if a runner is likely to finish much slower or faster than expected, and (2) the prediction is a single point estimate with no information about uncertainty. A Bayesian inference model addresses both concerns by using the runner's previous splits in the race to generate a probability distribution of possible finish times, using conditional probability and empirical likelihood estimates. In this project, a Bayesian model is evaluated in comparison to the traditional estimate method.
+1. The estimates only use one piece of data (the average pace so far) to predict the finish time
+2. The prediction is a single point estimate with no information about uncertainty. 
 
-# Methods
+An empirical Bayesian inference model addresses both concerns by using the runner's previous splits in the race to generate a probability distribution of possible finish times. The posterior finish distribution directly quantifies the uncertainty behind the estimate. 
 
-## Data
+# Data
+We scraped Boston Marathon results from the Boston Athletic Association (BAA) website. Our dataset contains the name, age, gender, and splits (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K, and FINISH, all in seconds) for every finishing runner of the Boston Marathon from 2009-2023 (312,805 total). We partitioned this data into a training set (286,777 runners from 2009-2022) and a test set (26,028 runners from 2023).
 
-We scraped the data for this project from the Boston Athletic Association website. It contains a runner's name, age, gender, the intermediate splits of their race (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K) as well as their finish time. The splits and finish times are recorded in seconds. The data includes every finishing runner from each Boston Marathon from 2009-2023, resulting in 312805 rows of data. The data was partitioned into two groups: a training set (286777 runners from 2009-2022) and a test set (26028 runners from 2023). 
+# Model
+The model utilizes Bayes theorem to iteratively update the posterior finish time distribution: Using a runner's splits so far (s_1, ..., s_t), the model predicts the finish split (s_f) according to the following equation: 
 
-## Model
+$$P(s_f | s_{1:t}) ∝ P(s_t | s_f, s_{1:t-1}) * P(s_f | s_{1:t-1})$$
 
-The model utilizes Bayes theorem to iteratively update the posterior finish time distribution according to the following general equation: 
-
-`P(finish | current_split, previous_splits) ∝ P(current_split | finish, previous_splits) * P(finish | previous_splits)`. 
-
-In this equation, the posterior distribution is the normalized product of the likelihood distribution and the prior distribution. 
+In this equation, the posterior distribution is the normalized product of the likelihood distribution and the prior distribution. Likehihoods are estimated empirically.
 
 
 # Results
 
-Usually you want to have a nice table displaying some important results that you have calculated. In `posterdown` this is as easy as using the `kable` table formatting you are probably use to as per typical R Markdown formatting.
+We found that the model predictions have similar absolute errors (predicted time - actual time) to the default predictor earlier in the race (Fig. 1 left), and outperform the default predictor as more splits are used (Fig. 1 right). Visually, as time goes on, more people are concentrated around the 0, meaning there is very little error.
 
-You can reference tables like so: Table \@ref(tab:mytable). Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam placerat augue at velit tincidunt semper. Donec elementum porta posuere. Nullam interdum, odio at tincidunt feugiat, turpis nisi blandit eros, eu posuere risus felis non quam. Nam eget lorem odio. Duis et aliquet orci. Phasellus nec viverra est.
+From these tables, we are able to plot the posterior distributions at each iteration on a single plot, an example of which is shown below.
 
-```{r mytable, out.width='80%'}
-knitr::kable(iris[1:10, 1:4], caption = 'Table caption.',align = 'c',"html")
-```
+<!--![Caption for the picture.](./CompareHALF.png) -->
 
-Or with figures: Figure \@ref(fig:standard-plot), or Figure \@ref(fig:morefigs).
+        
+<figure>
+<p align="center">
 
-```{r standard-plot, out.width='80%', fig.align='center', fig.cap='Great figure!', fig.height=5}
-plot(mtcars[1:2])
-```
+  <img src="./Compare10K.png" style="width: 49%; height: 49%"/>
+  <img src="./Compare30K.png" style="width: 49%; height: 49%"/>
+  <figcaption><em>Fig.1 - The errors of the posterior <span style="color:#ff7f0e">modes</span> of the model's predictions, compared to the errors of the naive <span style="color:#1f77b4">default</span> predictor. Posterior <span style="color:#2ca02c">medians</span> and <span style="color:#d62728">means</span> are also included. Errors are shown for after 10K (left) and after 30K (right). Distributions more centered around zero have smaller errors.</em></figcaption>
+</p>
+</figure>
 
-```{r morefigs, out.width='80%', echo=TRUE, fig.cap='Amazing, right?!', fig.height=5}
-data <- iris
+<!--
+<p align="center">
+  <img src="./CompareHALF.png" style="width: 60%; height: 60%"/>
+  <figcaption>Fig.1 - The posterior #ff7f0emodes of the model's predictions (yellow) have comparable errors to the <span style="color:#1f77b4">naive default predictor</span>. Posterior medians (green) and means (red) are also included.</figcaption>
+</p>
+-->
 
-plot(x = data$Sepal.Length, 
-     y = data$Sepal.Width, 
-     col = data$Species,
-     pch = 19, 
-     xlab = "Sepal Length (cm)",
-     ylab = "Sepal Width (cm)")
 
-```
-
-# Next Steps
-
-Aliquam sed faucibus risus, quis efficitur erat. Vestibulum semper mauris quis tempus eleifend. Aliquam sagittis dictum ipsum, quis viverra ligula eleifend ut. Curabitur sagittis vitae arcu eget faucibus. In non elementum felis. Duis et aliquam nunc. Nunc pulvinar sapien nunc, vel pretium nisi efficitur in. Fusce fringilla maximus leo et maximus. Fusce at ligula laoreet, iaculis mi at, auctor odio. Praesent sed elementum justo. Aenean consectetur risus rhoncus tincidunt efficitur. Praesent dictum mauris at diam maximus maximus [@R-posterdown].
+<p align="center">
+  <img src="./VinnyPlot.png" style="width: 90%; height: 90%"/>
+  <figcaption><em>Fig.2 - Finish time estimate plot containing all splits for Vinny Castronuovo (fastest male Bostonain, former Northeastern Club Running President) The actual finish time is denoted with the vertical dotted black line.</em></figcaption>
+</p>
 
 # Conclusion
 
-Try `posterdown` out! Hopefully you like it!
+Scan the QR code to access the website for this project. It contains functionality to automatically generate a finish time distribution plot given your own splits, and also allows you to view the plots of select past runners (namely, Northeastern Club Running runners that ran in 2023). This app can be used to get a better sense of uncertainty than the traditional estimates given by the BAA during the marathon.
+
+<p align="center">
+  <img src="QR.png" style="width: 30%; height: 30%"/>
+</p>
 
 ```{r, include=FALSE}
 knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')

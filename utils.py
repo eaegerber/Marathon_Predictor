@@ -119,7 +119,7 @@ def _get_marks(marks_list: Union[list, None], zero_k: bool = False, finish: bool
         marks_list = all_marks
     marks_ls = [m for m in all_marks if m in marks_list]
     if zero_k and marks_ls[0] != "0K":
-        marks_ls = ["0K"] + marks_list
+        marks_ls = ["0K"] + marks_list  # TODO fix
     if finish:
         marks_ls = marks_ls + ["Finish Net"]
     return marks_ls
