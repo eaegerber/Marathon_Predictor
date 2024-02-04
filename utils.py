@@ -73,9 +73,9 @@ def get_train_set(people: pd.DataFrame, zero_k: bool = False):
     if zero_k:
         people["0K"] = 0
 
-    people_info = people[["Name", "Age", "M/F"]]
     marks_ls = _get_marks(marks_list=None, zero_k=zero_k, finish=True)
     people = people[people["Year"] != 2023]
+    people_info = people[["Name", "Age", "M/F"]]
     people_array = (np.array(people[marks_ls]) / 60).round(2)
     return people_array, people_info
 
@@ -85,9 +85,9 @@ def get_test_set(people: pd.DataFrame, zero_k: bool = False):
     if zero_k:
         people["0K"] = 0
 
-    people_info = people[["Name", "Age", "M/F"]]
     marks_ls = _get_marks(marks_list=None, zero_k=zero_k, finish=True)
     people = people[people["Year"] == 2023]
+    people_info = people[["Name", "Age", "M/F"]]
     people_array = (np.array(people[marks_ls]) / 60).round(2)
     return people_array, people_info
 

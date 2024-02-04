@@ -11,8 +11,11 @@ def bayes_iter(prior: np.array, lk: np.array, smoothing_factor: float = 0.00001)
     to the likelihood array, normalize, add a smoothing factor to each value,
     normalize again, and return the posterior distribution as a numpy array"""
     unnorm = lk * prior
-    a = unnorm / unnorm.sum()
-    return (a + smoothing_factor) / (a + smoothing_factor).sum()
+    if unnorm.sum() == 0:
+        normed = prior
+    else:
+        normed = unnorm / unnorm.sum()
+    return (normed + smoothing_factor) / (normed + smoothing_factor).sum()
 
 
 def full_bayes_dict(runner_dict: dict, initial_prior: np.array, lk_data: pd.DataFrame, s2) -> dict:

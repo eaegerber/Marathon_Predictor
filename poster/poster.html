@@ -16,6 +16,7 @@ Font-awesome icons ie github or twitter
 <!--
 Google fonts api stuff
 -->
+<link href='https://fonts.googleapis.com/css?family=Times New Roman' rel='stylesheet'>
 
 
 
@@ -39,7 +40,7 @@ width: 36in;
 height: 24in;
 padding: 0;
 text-align: justify;
-font-family: Palatino;
+font-family: Times New Roman;
 }
 .poster_wrap {
 width: 36in;
@@ -50,14 +51,14 @@ padding: 0cm;
 width: 36in;
 height: calc(24in * 0.15);
 overflow: hidden;
-background-color: #0b4545;
-border: 0.5cm solid #0b4545;
+background-color: #C8102E;
+border: 0.5cm solid #C8102E;
 }
 .logo_left {
 float: left;
 width: 10%;
 height: 100%;
-background-color: #0b4545;
+background-color: #C8102E;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -66,7 +67,7 @@ justify-content: center;
 float: right;
 width: 10%;
 height: 100%;
-background-color: #0b4545;
+background-color: #C8102E;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -83,7 +84,7 @@ transform: translateY(-50%);
 -webkit-transform: translateY(-50%);
 }
 #title {
-font-family: Palatino;
+font-family: Times New Roman;
 }
 /* unvisited link */
 a:link {
@@ -107,9 +108,9 @@ a:active {
 color: #cc0000;
 }
 .poster_body {
--webkit-column-count: 4; /* Chrome, Safari, Opera */
--moz-column-count: 4; /* Firefox */
-column-count: 4;
+-webkit-column-count: 3; /* Chrome, Safari, Opera */
+-moz-column-count: 3; /* Firefox */
+column-count: 3;
 -webkit-column-fill: auto;
 -moz-column-fill: auto;
 column-fill: auto;
@@ -119,9 +120,9 @@ column-rule-width: 1mm;
 -webkit-column-rule-style: dashed;
 -moz-column-rule-style: dashed;
 column-rule-style: dashed;
--webkit-column-rule-color: #0b4545;
--moz-column-rule-color: #0b4545;
-column-rule-color: #0b4545;
+-webkit-column-rule-color: #C8102E;
+-moz-column-rule-color: #C8102E;
+column-rule-color: #C8102E;
 column-gap: 0.5cm;
 padding-left: calc(0.5cm / 2);
 padding-right: calc(0.5cm / 2);
@@ -143,7 +144,7 @@ padding-bottom: calc(24in * 0.01);
 background-color: #ffffff;
 }
 .poster_title h3 {
-color: #ffffff;
+color: #FFFFFF;
 font-size: 50pt;
 margin: 0;
 border: 0;
@@ -170,9 +171,9 @@ margin-bottom: 0;
 .poster_body h1 {
 text-align: center;
 color: #FFFFFF;
-font-size: 65pt;
-border: 2mm solid #0b4545;
-background-color: #0b4545;
+font-size: 40pt;
+border: 2mm solid #C8102E;
+background-color: #C8102E;
 border-radius: 4mm 0mm;
 margin-top: 2mm;
 margin-bottom: 2mm;
@@ -224,8 +225,8 @@ padding-bottom: 3mm;
 code {
 font-size: 1em;
 font-family: monospace;
-background-color: #00808024;
-color: #0b4545;
+background-color: #C8102E24;
+color: #C8102E;
 padding: 1.2mm;
 border-radius: 2mm;
 }
@@ -279,6 +280,7 @@ font-size: 20pt;
 <div class="title_container">
 <!-- Left Logo  -->
 <div class="logo_left">
+<img src= 'logo.jpg' style="width: 80%">
 </div>
 <!-- Poster Title -->
 <div class= "poster_title">
@@ -288,26 +290,12 @@ font-size: 20pt;
 </div>
 <!-- Right Logo  -->
 <div class="logo_right">
-<img src=./logo.jpg style="width: 80%">
+<img src=QR.png style="width: 80%">
 </div>
 </div>
 
 <div class='poster_body_wrap'>
 <div class='poster_body'>
-<!--
-<style type="text/css">
-div.title_container{
-   background-color: #C8102E;
-}
-
-div.logo_left{
-  background-color: #A4804A;
-}
-div.logo_right{
-  background-color: #A4804A;
-}
-</style>
--->
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>In the middle of a marathon, expected finish times are typically estimated by naively extrapolating the average pace covered so far, assuming it will be held constant for the rest of the race. These predictions have two major issues:</p>
@@ -320,49 +308,44 @@ div.logo_right{
 <div id="data" class="section level1">
 <h1>Data</h1>
 <p>We scraped Boston Marathon results from the Boston Athletic Association (BAA) website. Our dataset contains the name, age, gender, and splits (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K, and FINISH, all in seconds) for every finishing runner of the Boston Marathon from 2009-2023 (312,805 total). We partitioned this data into a training set (286,777 runners from 2009-2022) and a test set (26,028 runners from 2023).</p>
+<p>a</p>
 </div>
 <div id="model" class="section level1">
 <h1>Model</h1>
-<p>The model utilizes Bayes theorem to iteratively update the posterior finish time distribution: Using a runner’s splits so far (s_1, …, s_t), the model predicts the finish split (s_f) according to the following equation:</p>
+<p>The model iteratively update the posterior finish time distribution using Bayes Theorem. Using a runner’s splits so far (<span class="math inline">\(s_1\)</span>, …, <span class="math inline">\(s_t\)</span>), the model predicts the finish split <span class="math inline">\(s_f\)</span> according to the following equation <span class="citation">(Gelman 2021)</span>:</p>
 <p><span class="math display">\[P(s_f | s_{1:t}) ∝ P(s_t | s_f, s_{1:t-1}) * P(s_f | s_{1:t-1})\]</span></p>
-<p>In this equation, the posterior distribution is the normalized product of the likelihood distribution and the prior distribution. Likehihoods are estimated empirically.</p>
+<p>In this equation, the posterior distribution is the normalized product of the likelihood distribution and the prior distribution. Likelihoods are estimated empirically using the training set. We use the posterior mode as a point estimate for the model, but it has the added benefit that the distribution can be used to form credible intervals.</p>
 </div>
 <div id="results" class="section level1">
 <h1>Results</h1>
-<p>We found that the model predictions have similar absolute errors (predicted time - actual time) to the default predictor earlier in the race (Fig. 1 left), and outperform the default predictor as more splits are used (Fig. 1 right). Visually, as time goes on, more people are concentrated around the 0, meaning there is very little error.</p>
+<p>The Bayesian model greatly outperforms the tradiational method in mean squared error (MSE) on the training set (Fig 1), especially in the middle of the race (when the estimate matters the most). Performance in the Bayes model increases as more splits (and thus, more information) is incorporated into the model.</p>
+<p>We found that the Bayesian model has very similar performance to linear regression in terms of test set MSE, but has the additional benefit of having an interpretable posterior distribution, rather than a single point estimate.</p>
+<center>
+<div class="figure">
+<img src="all_errors.png" alt="" />
+<p class="caption"><em>Fig.1 - MSE at different stages of the race for each method. The traditional method (yellow) has significantly higher errors compared to the Bayesian posterior modes (red, solid) and linear regression (teal). Bayesian posterior medians (red, dotted) and means (red, dashed) are also shown.</em></p>
+</div>
+</center>
+<p>We found that the Bayesian model has very similar performance to linear regression in terms of test set MSE, but has the additional benefit of having an interpretable posterior distribution, rather than a single point estimate.</p>
 <p>From these tables, we are able to plot the posterior distributions at each iteration on a single plot, an example of which is shown below.</p>
-<!--![Caption for the picture.](./CompareHALF.png) -->
-<figure>
-<p align="center">
-<img src="Compare10K.png" style="width: 49%; height: 49%"/>
-<img src="Compare30K.png" style="width: 49%; height: 49%"/>
-<figcaption>
-<em>Fig.1 - The errors of the posterior <span style="color:#ff7f0e">modes</span> of the model’s predictions, compared to the errors of the naive <span style="color:#1f77b4">default</span> predictor. Posterior <span style="color:#2ca02c">medians</span> and <span style="color:#d62728">means</span> are also included. Errors are shown for after 10K (left) and after 30K (right). Distributions more centered around zero have smaller errors.</em>
-</figcaption>
-</p>
-</figure>
-<!--
-<p align="center">
-  <img src="CompareHALF.png" style="width: 60%; height: 60%"/>
-  <figcaption>Fig.1 - The posterior #ff7f0emodes of the model's predictions (yellow) have comparable errors to the <span style="color:#1f77b4">naive default predictor</span>. Posterior medians (green) and means (red) are also included.</figcaption>
-</p>
--->
-<p align="center">
-<img src="VinnyPlot.png" style="width: 90%; height: 90%"/>
-<figcaption>
-<em>Fig.2 - Finish time estimate plot containing all splits for Vinny Castronuovo (fastest male Bostonain, former Northeastern Club Running President) The actual finish time is denoted with the vertical dotted black line.</em>
-</figcaption>
-</p>
+<center>
+<div class="figure">
+<img src="VinnyPlot.png" width="640" alt="" />
+<p class="caption"><em>Fig.2 - Finish time estimate plot containing all splits for Vinny Castronuovo (former Northeastern Club Running President) The actual finish time is denoted with the vertical dotted black line.</em></p>
+</div>
+</center>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p>Scan the QR code to access the website for this project. It contains functionality to automatically generate a finish time distribution plot given your own splits, and also allows you to view the plots of select past runners (namely, Northeastern Club Running runners that ran in 2023). This app can be used to get a better sense of uncertainty than the traditional estimates given by the BAA during the marathon.</p>
-<p align="center">
-<img src="QR.png" style="width: 30%; height: 30%"/>
-</p>
+<p>Scan the QR code above to access the app for this project. It contains functionality to automatically generate a finish time distribution plot given your own splits, and also allows you to view the plots of select past runners (namely, Northeastern Club Running runners that ran in 2023). This app can be used to get a better sense of uncertainty than the traditional estimates given by the BAA during the marathon.</p>
 </div>
-<div id="references" class="section level1">
+<div id="references" class="section level1 unnumbered">
 <h1>References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-1" class="csl-entry">
+Gelman, Carlin, Andrew. 2021. <em>Bayesian Data Analysis</em>. CRC Press. <a href="http://www.stat.columbia.edu/~gelman/book/BDA3.pdf">http://www.stat.columbia.edu/~gelman/book/BDA3.pdf</a>.
+</div>
+</div>
 </div>
 </div>
 </div>

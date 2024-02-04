@@ -129,8 +129,13 @@ def run_all_analyses(
 
 if __name__ == "__main__":
     f = time.time()
-    sample_size = 2000
-    train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize()
+    sample_size = 1000
+    # fname = "processed_data/full_data_women.csv"
+    train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize(
+        # train_file=fname,
+        # test_file=fname
+    )
+    # train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize()
     # test_sample = test_data[np.random.choice(range(test_data.shape[0]), sample_size)]
     results, good_data = run_all_analyses(
         test_df=test_data,
@@ -151,9 +156,10 @@ if __name__ == "__main__":
     pd.DataFrame({m: pd.DataFrame(results['conf_lens'][m])[0] for m in marks}).to_csv('analysis/conf_lens_50.csv')
     pd.DataFrame({m: pd.DataFrame(results['conf_lens'][m])[1] for m in marks}).to_csv('analysis/conf_lens_90.csv')
     pd.DataFrame({m: pd.DataFrame(results['conf_lens'][m])[2] for m in marks}).to_csv('analysis/conf_lens_95.csv')
-    abs(pd.DataFrame({m: results["mode"][m] for m in marks})).to_csv('analysis/mode.csv')
-    abs(pd.DataFrame({m: results["median"][m] for m in marks})).to_csv('analysis/median.csv')
-    abs(pd.DataFrame({m: results["mean"][m] for m in marks})).to_csv('analysis/mean.csv')
+    pd.DataFrame({m: results["mode"][m] for m in marks}).to_csv('analysis/mode.csv')
+    pd.DataFrame({m: results["median"][m] for m in marks}).to_csv('analysis/median.csv')
+    pd.DataFrame({m: results["mean"][m] for m in marks}).to_csv('analysis/mean.csv')
+    pd.DataFrame({m: results["def"][m] for m in marks}).to_csv('analysis/def.csv')
 
     mode_df = pd.DataFrame({mark: pd.Series(error_list) for mark, error_list in results["mode"].items()})
     median_df = pd.DataFrame({mark: pd.Series(error_list) for mark, error_list in results["median"].items()})
@@ -170,7 +176,8 @@ if __name__ == "__main__":
         {m: mean_df[m].value_counts().sort_index() / mean_df[m].count() for m in mean_df.columns}).fillna(0)
     def_err_probs = pd.DataFrame(
         {m: def_df[m].value_counts().sort_index() / def_df[m].count() for m in def_df.columns}).fillna(0)
-    # mode_err_count = pd.DataFrame({m: mode_df[m].value_counts().sort_index() for m in mode_df.columns}).fillna(0).astype(int)
+    # mode_err_count = pd.DataFrame({m: mode_df[m].value_counts().sort_index() for m in mode_df.columns}).fillna(
+    #     0).astype(int)
 
     for i, dist in enumerate(marks):
         if dist == "0K":
