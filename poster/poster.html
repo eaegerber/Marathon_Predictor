@@ -16,7 +16,7 @@ Font-awesome icons ie github or twitter
 <!--
 Google fonts api stuff
 -->
-<link href='https://fonts.googleapis.com/css?family=Times New Roman' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=FF Real' rel='stylesheet'>
 
 
 
@@ -35,12 +35,12 @@ padding: 0;
 }
 body {
 margin: 0;
-font-size: 42px;
+font-size: 40px;
 width: 36in;
 height: 24in;
 padding: 0;
 text-align: justify;
-font-family: Times New Roman;
+font-family: FF Real;
 }
 .poster_wrap {
 width: 36in;
@@ -51,14 +51,14 @@ padding: 0cm;
 width: 36in;
 height: calc(24in * 0.15);
 overflow: hidden;
-background-color: #C8102E;
-border: 0.5cm solid #C8102E;
+background-color: #A81616;
+border: 0.5cm solid #A81616;
 }
 .logo_left {
 float: left;
 width: 10%;
 height: 100%;
-background-color: #C8102E;
+background-color: #A81616;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -67,7 +67,7 @@ justify-content: center;
 float: right;
 width: 10%;
 height: 100%;
-background-color: #C8102E;
+background-color: #A81616;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -84,7 +84,7 @@ transform: translateY(-50%);
 -webkit-transform: translateY(-50%);
 }
 #title {
-font-family: Times New Roman;
+font-family: FF Real;
 }
 /* unvisited link */
 a:link {
@@ -120,18 +120,18 @@ column-rule-width: 1mm;
 -webkit-column-rule-style: dashed;
 -moz-column-rule-style: dashed;
 column-rule-style: dashed;
--webkit-column-rule-color: #C8102E;
--moz-column-rule-color: #C8102E;
-column-rule-color: #C8102E;
+-webkit-column-rule-color: #A81616;
+-moz-column-rule-color: #A81616;
+column-rule-color: #A81616;
 column-gap: 0.5cm;
 padding-left: calc(0.5cm / 2);
 padding-right: calc(0.5cm / 2);
 height: 100%;
-color: #000000
+color: #A81616
 background-color: #ffffff;
 }
 .poster_title h1 {
-font-size: 75pt;
+font-size: 60pt;
 margin: 0;
 border: 0;
 font-weight: normal;
@@ -145,7 +145,7 @@ background-color: #ffffff;
 }
 .poster_title h3 {
 color: #FFFFFF;
-font-size: 50pt;
+font-size: 35pt;
 margin: 0;
 border: 0;
 font-weight: normal;
@@ -172,8 +172,8 @@ margin-bottom: 0;
 text-align: center;
 color: #FFFFFF;
 font-size: 40pt;
-border: 2mm solid #C8102E;
-background-color: #C8102E;
+border: 2mm solid #A81616;
+background-color: #A81616;
 border-radius: 4mm 0mm;
 margin-top: 2mm;
 margin-bottom: 2mm;
@@ -225,8 +225,8 @@ padding-bottom: 3mm;
 code {
 font-size: 1em;
 font-family: monospace;
-background-color: #C8102E24;
-color: #C8102E;
+background-color: #A8161624;
+color: #A81616;
 padding: 1.2mm;
 border-radius: 2mm;
 }
@@ -285,7 +285,7 @@ font-size: 20pt;
 <!-- Poster Title -->
 <div class= "poster_title">
 <h1 id="title">Quantifying Uncertainty in Marathon Finish Time Predictions</h1>
-<h3 id="author">Brandon Onyejekwe<sup></sup>, Eric Gerber<sup></sup></h3><br>
+<h3 id="author">Brandon Onyejekwe<sup>1</sup>, Eric Gerber<sup>1</sup></h3><br>
 <h5 id="affiliation"><sup></sup> Khoury College of Computer Sciences, Northeastern University</h5>
 </div>
 <!-- Right Logo  -->
@@ -308,7 +308,6 @@ font-size: 20pt;
 <div id="data" class="section level1">
 <h1>Data</h1>
 <p>We scraped Boston Marathon results from the Boston Athletic Association (BAA) website. Our dataset contains the name, age, gender, and splits (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K, and FINISH, all in seconds) for every finishing runner of the Boston Marathon from 2009-2023 (312,805 total). We partitioned this data into a training set (286,777 runners from 2009-2022) and a test set (26,028 runners from 2023).</p>
-<p>a</p>
 </div>
 <div id="model" class="section level1">
 <h1>Model</h1>
@@ -342,8 +341,14 @@ font-size: 20pt;
 <div id="references" class="section level1 unnumbered">
 <h1>References</h1>
 <div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-2" class="csl-entry">
+Allen, Dechow, Eric J. 2014. <em>Reference-Dependent Preferences: Evidence from Marathon Runners</em>.
+</div>
 <div id="ref-1" class="csl-entry">
-Gelman, Carlin, Andrew. 2021. <em>Bayesian Data Analysis</em>. CRC Press. <a href="http://www.stat.columbia.edu/~gelman/book/BDA3.pdf">http://www.stat.columbia.edu/~gelman/book/BDA3.pdf</a>.
+Gelman, Carlin, Andrew. 2021. <em>Bayesian Data Analysis</em>. CRC Press.
+</div>
+<div id="ref-3" class="csl-entry">
+Kwong, &amp; Nadarajah, H. S. 2019. <em>Modelling Dynamics of Marathons – a Mixture Model Approach</em>.
 </div>
 </div>
 </div>

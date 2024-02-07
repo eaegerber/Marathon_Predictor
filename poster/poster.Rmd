@@ -5,27 +5,36 @@ poster_height: "24in"
 poster_width: "36in"
 author:
   - name: Brandon Onyejekwe
+    affil: 1
   - name: Eric Gerber
+    affil: 1
 affiliation:
+    affil: 1
     address: Khoury College of Computer Sciences, Northeastern University
-title_textsize: "75pt"
-affiliation_textsize: "35pt"
+title_textsize: "60pt"
+body_textcol: "#A81616"
 logoleft_name: ./logo.jpg
 logoright_name: QR.png
 column_numbers: 3
 columnline_width: "1mm"
 column_margins: "0.5in"
-body_textsize: "42px"
-primary_colour: "#C8102E"
-secondary_colour: "#C8102E"
+body_textsize: "40px"
+primary_colour: "#A81616"
+secondary_colour: "#A81616"
+# "#000000"
+#"#C8102E"
 #body_bgcol:  "#A4804A" 
 author_textcol: "#FFFFFF"
-font_family: "Times New Roman"
+author_textsize: "35pt"
+affiliation_textsize: "30pt"
+font_family: "FF Real"
 sectitle_textsize: "40pt"
 output: 
   posterdown::posterdown_html:
     self_contained: false
 bibliography: packages.bib
+nocite: |
+  @1, @2, @3
 ---
 
 # Introduction
@@ -40,8 +49,6 @@ An empirical Bayesian inference model addresses both concerns by using the runne
 # Data
 
 We scraped Boston Marathon results from the Boston Athletic Association (BAA) website. Our dataset contains the name, age, gender, and splits (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K, and FINISH, all in seconds) for every finishing runner of the Boston Marathon from 2009-2023 (312,805 total). We partitioned this data into a training set (286,777 runners from 2009-2022) and a test set (26,028 runners from 2023).
-
-a
 
 # Model
 
