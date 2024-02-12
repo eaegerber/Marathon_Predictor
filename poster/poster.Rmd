@@ -14,7 +14,7 @@ affiliation:
 title_textsize: "60pt"
 body_textcol: "#A81616"
 logoleft_name: ./logo.jpg
-logoright_name: QR.png
+logoright_name: QR_code.png
 column_numbers: 3
 columnline_width: "1mm"
 column_margins: "0.5in"

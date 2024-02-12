@@ -23,7 +23,7 @@ with ui.nav_panel("NUCR Plots"):
     "View the plots of NUCR runners!"
 
     ui.input_selectize("var", "Select Runner", choices=list(test_info["Name"]))
-    ui.input_checkbox_group("var3", "Select Splits", choices=marks[1:], selected=marks[1:], inline=True)
+    ui.input_checkbox_group("var2", "Select Splits", choices=marks[1:], selected=marks[1:], inline=True)
 
     @render.plot
     def nucr_hist():
@@ -32,12 +32,14 @@ with ui.nav_panel("NUCR Plots"):
         i = map[name]
         row = test_data[i]
         testing = {dist: mark for dist, mark in zip(marks, row)}
-        plot_from_data(testing, name=test_info.iloc[i]["Name"], marks=list(input.var3()), prior=informed_prior,
+        plot_from_data(testing, name=test_info.iloc[i]["Name"], marks=list(input.var2()), prior=informed_prior,
                         lk_data=train_data, s2=s2_matrix, plot_range=40)
 
 
 with ui.nav_panel("My Plot"):
     "Move the sliders to create your own plot!"
+
+    ui.input_checkbox_group("var3", "Select Splits", choices=marks[1:], selected=marks[1:], inline=True)
 
     with ui.layout_column_wrap(gap="2rem"):
         ui.input_slider("s1", "5K", min=15, max=30, value=24, step=0.1),
@@ -65,4 +67,6 @@ with ui.nav_panel("Table"):
         return px.data.tips()
     
 
+with ui.nav_panel("Project Info"):
+    "words about the project info go here."
 
