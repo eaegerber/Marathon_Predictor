@@ -3,10 +3,14 @@
 
 import numpy as np
 import random
+import arviz as az
 import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
 from scipy.stats import rv_continuous, norm
+from bayes_models.model1 import LinearModel as LinearModel1
+from bayes_models.model2 import LinearModel as LinearModel2
+from bayes_models.model3 import LinearModel as LinearModel3
 
 
 def str_to_int_time(time: str) -> Union[int, None]:
@@ -152,6 +156,24 @@ def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_t
 
 #######
 
+def get_models_and_traces(
+    # LinearModel1,
+    # LinearModel2,
+    model1 = "traces/linear_model1.nc",
+    trace1 = "traces/linear_trace1.nc",
+    model2 = "traces/linear_model2.nc",
+    trace2 = "traces/linear_trace2.nc",
+    model3: bool = False,
+
+):
+    models = [LinearModel1.load(model1), LinearModel2.load(model2)]
+    traces = [az.from_netcdf(trace1), az.from_netcdf(trace2)]
+
+    if model3:
+        models.append(LinearModel1.load("traces/linear_model3.nc"))
+        traces.append(az.from_netcdf("traces/linear_trace3.nc"))
+    
+    return models, traces
 
 if __name__ == '__main__':
     df = pd.read_csv("processed_data/full_data_secs.csv")

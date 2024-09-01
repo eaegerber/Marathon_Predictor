@@ -163,4 +163,4 @@ cython_debug/
 /likelihoods/likelihoods*.json
 /analysis/*.csv
 /archive
-/traces_NEW
+/traces

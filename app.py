@@ -4,22 +4,10 @@ from shiny import reactive
 from shiny.express import input, render, ui
 
 import pandas as pd
-from utils import int_to_str_time
+from utils import int_to_str_time, get_models_and_traces
 from race_class import RaceSplits, get_from_info, get_race_for_person
 
-import arviz as az
-from bayes_models_NEW.model1 import LinearModel as LinearModel1
-from bayes_models_NEW.model2 import LinearModel as LinearModel2
-# from bayes_models_NEW.model3 import LinearModel as LinearModel3
-
-trace1 = az.from_netcdf("traces_NEW/linear_trace1.nc")
-model1 = LinearModel1.load("traces_NEW/linear_model1.nc")
-
-trace2 = az.from_netcdf("traces_NEW/linear_trace2.nc")
-model2 = LinearModel2.load("traces_NEW/linear_model2.nc")
-
-models = [model1, model2]
-traces = [trace1, trace2]
+models, traces = get_models_and_traces()
 
 nucr_filename = "processed_data/nucr_runners.csv"
 nucr = pd.read_csv(nucr_filename)
