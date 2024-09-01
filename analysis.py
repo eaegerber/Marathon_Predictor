@@ -4,7 +4,7 @@ import time
 import pandas as pd
 from typing import Union
 from collections import defaultdict
-from bayes_model import _prior_dist, person_dict, initialize
+from archive.bayes_model import _prior_dist, person_dict, initialize
 import matplotlib.pyplot as plt
 # from gmm import quals_train, quals_test
 

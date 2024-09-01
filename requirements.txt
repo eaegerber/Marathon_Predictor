@@ -3,3 +3,7 @@ numpy
 pandas
 matplotlib
 scipy
+seaborn
+bambi
+arviz
+faicons

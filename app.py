@@ -1,72 +1,121 @@
 
-import plotly.express as px
+import faicons as fa
+from shiny import reactive
 from shiny.express import input, render, ui
-from shinywidgets import render_widget
 
-import numpy as np
 import pandas as pd
-from bayes_model import initialize, _prior_dist
-from visualize import plot_from_data
+from utils import int_to_str_time
+from race_class import RaceSplits, get_from_info, get_race_for_person
+
+import arviz as az
+from bayes_models_NEW.model1 import LinearModel as LinearModel1
+from bayes_models_NEW.model2 import LinearModel as LinearModel2
+# from bayes_models_NEW.model3 import LinearModel as LinearModel3
+
+trace1 = az.from_netcdf("traces_NEW/linear_trace1.nc")
+model1 = LinearModel1.load("traces_NEW/linear_model1.nc")
+
+trace2 = az.from_netcdf("traces_NEW/linear_trace2.nc")
+model2 = LinearModel2.load("traces_NEW/linear_model2.nc")
+
+models = [model1, model2]
+traces = [trace1, trace2]
 
 nucr_filename = "processed_data/nucr_runners.csv"
 nucr = pd.read_csv(nucr_filename)
-train_data, train_info, test_data, test_info, marks, s2_matrix, max_finish = initialize(test_file=nucr_filename)
-test_sample = test_data[np.random.choice(range(test_data.shape[0]), 10)]
-informed_prior = _prior_dist(informed=True, max_time=max_finish)
-
-# with ui.sidebar():
-#     ui.input_select("var", "Select variable", choices=["total_bill", "tip"])
-
+names = nucr["Name"]
+marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+race_splits = RaceSplits()
 ui.page_opts(title="Quantifying Uncertainty in Live Marathon Finish Time Predictions", fillable=True)
 
-with ui.nav_panel("NUCR Plots"):
-    "View the plots of NUCR runners!"
-
-    ui.input_selectize("var", "Select Runner", choices=list(test_info["Name"]))
-    ui.input_checkbox_group("var2", "Select Splits", choices=marks[1:], selected=marks[1:], inline=True)
-
-    @render.plot
-    def nucr_hist():
-        map = {name: i for i, name in enumerate(test_info["Name"])}
-        name = input.var()
-        i = map[name]
-        row = test_data[i]
-        testing = {dist: mark for dist, mark in zip(marks, row)}
-        plot_from_data(testing, name=test_info.iloc[i]["Name"], marks=list(input.var2()), prior=informed_prior,
-                        lk_data=train_data, s2=s2_matrix, plot_range=40)
-
-
 with ui.nav_panel("My Plot"):
-    "Move the sliders to create your own plot!"
 
-    ui.input_checkbox_group("var3", "Select Splits", choices=marks[1:], selected=marks[1:], inline=True)
-
-    with ui.layout_column_wrap(gap="2rem"):
-        ui.input_slider("s1", "5K", min=15, max=30, value=24, step=0.1),
-        ui.input_slider("s2", "10K", min=30, max=60, value=48, step=0.1)
-        ui.input_slider("s3", "15K", min=45, max=90, value=72, step=0.1)
-        ui.input_slider("s4", "20K", min=60, max=120, value=96, step=0.1)
-        ui.input_slider("s5", "HALF", min=63, max=126, value=100, step=0.1)
-        ui.input_slider("s6", "25K", min=75, max=150, value=118, step=0.1),
-        ui.input_slider("s7", "30K", min=90, max=180, value=142, step=0.1)
-        ui.input_slider("s8", "35K", min=105, max=210, value=168, step=0.1)
-        ui.input_slider("s9", "40K", min=120, max=240, value=192, step=0.1)
-
-
-    @render.plot
-    def my_hist():
-        testing = {"5K": input.s1(), "10K": input.s2(), "15K": input.s3(), "20K": input.s4(), "HALF": input.s5(),
-                    "25K": input.s6(), "30K": input.s7(), "35K": input.s8(), "40K": input.s9()}
-        plot_from_data(testing, name="My", marks=["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"], prior=informed_prior,
-                        lk_data=train_data, s2=s2_matrix, plot_range=40)
-
-
-with ui.nav_panel("Table"):
-    @render.data_frame
-    def table():
-        return px.data.tips()
+    "View your finish time estimates in real time! Sequentially input your race splits (formatted MM:SS or HH:MM:SS) in the text box below, click go, and view your live prediction at that stage of the race. Input your times in 5km increments [5K, 10K, ..., 40K].  NOTE: if the app errors, refresh the page and try again."
+    @render.text 
+    @reactive.event(input.bttn)       
+    def text1():     
+        return f"Updated splits through {race_splits.show_next_dist()}"
     
+    ui.input_text("runner_split1", "", "MM:SS")
+    ui.input_action_button("bttn", "Go", class_="btn-success")
+    # ui.input_action_button("bttn2", "Reset", class_="btn-success")
+    # ui.input_checkbox_group("splits_list1", "Select Splits", choices=marks, selected=marks, inline=True)
+
+    with ui.layout_columns(col_widths=[6, 6, 12]):
+
+        @reactive.calc
+        def get_info1():
+            # print('hi', race_splits.show_next_dist())
+            race_splits.update_pace(input.runner_split1())
+            fig, table = get_from_info(race_splits, models=models, traces=traces, show=marks)                                       
+            # ui.update_text("runner_split1", f"Input split for {race_splits.show_next_dist()}", 0)
+            return fig, table
+                                     
+        with ui.card(full_screen=True):
+            ui.card_header("Live Prediction: Table")
+
+            with ui.popover(title="Filter credible intervals", placement="top"):        
+                fa.icon_svg("gear")
+                ui.input_checkbox_group("intervals1", "Credible Intervals", choices=["range_50", "range_80", "range_95"], 
+                                        selected=["range_50", "range_95"], inline=True)
+            
+            @render.data_frame
+            @reactive.event(input.bttn)
+            def table1():
+                info_table = get_info1()[1]
+                return info_table[["dist", "median"] + list(input.intervals1())]
+
+        with ui.card(full_screen=True):
+            ui.card_header("Live Prediction: Plot")
+
+            @render.plot
+            @reactive.event(input.bttn)
+            def nucr_hist1():
+                return get_info1()[0]
+
+
+with ui.nav_panel("NUCR Plots"):
+    "View the plots of NUCR runners! The motivation behind this project involves the Northeastern Club Running team, which has dozens of Boston Marathon qualifiers every year. Here are some select NUCR runners that ran in the 2023 Boston Marathon race. The vertical dotted black line in the plot shows their actual finish time."
+    ui.input_selectize("runner_name0", "Select Runner", choices=list(names))
+    ui.input_checkbox_group("splits_list0", "Select Splits", choices=marks, selected=marks, inline=True)
+
+    with ui.layout_columns(col_widths=[6, 6, 12]):
+
+        @reactive.calc
+        def get_info0():
+            mapping = {name: i for i, name in enumerate(names)}
+            name = input.runner_name0()
+            i = mapping[name]
+
+            race, actual = get_race_for_person(i, nucr)
+            fig, table = get_from_info(race, models=models, traces=traces, show=input.splits_list0(), actual=actual)
+            return fig, table, actual
+                                     
+        with ui.card(full_screen=True):
+            ui.card_header("Live Prediction: Table")
+
+            @render.text        
+            def text0():     
+                actual_time = get_info0()[2]
+                return f"Actual finish time: {int_to_str_time(actual_time)}" #.txt()
+            
+            with ui.popover(title="Filter credible intervals", placement="top"):        
+                fa.icon_svg("gear")
+                ui.input_checkbox_group("intervals0", "Credible Intervals", choices=["range_50", "range_80", "range_95"], 
+                                        selected=["range_50", "range_95"], inline=True)
+            
+            @render.data_frame
+            def table0():
+                info_table = get_info0()[1]
+                return info_table[["dist", "median"] + list(input.intervals0())]
+
+        with ui.card(full_screen=True):
+            ui.card_header("Live Prediction: Plot")
+
+            @render.plot
+            def nucr_hist0():
+                return get_info0()[0]
+            
 
 with ui.nav_panel("Project Info"):
-    "words about the project info go here."
-
+    "Quantifying Uncertainty in Marathon Finish Time Predictions: In the middle of a marathon, a runner’s expected finish time is commonly estimated by extrapolating the average pace covered so far, assuming it to be constant for the rest of the race. These predictions have two key issues: the estimates do not consider the in-race context that can determine if a runner is likely to finish faster or slower than expected, and the prediction is a single point estimate with no information about uncertainty. We implement two approaches to address these issues: Bayesian linear regression and quantile regression. Both methods incorporate information from all splits in the race and allow us to quantify uncertainty around the predicted finish times. We utilized 15 years of Boston Marathon data (312,805 runners total) to evaluate and compare both approaches. Finally, we developed an app for runners to visualize their estimated finish distribution in real time."

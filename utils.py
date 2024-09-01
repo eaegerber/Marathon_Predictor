@@ -2,6 +2,7 @@
 # utils.py: utility functions
 
 import numpy as np
+import random
 import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
@@ -68,48 +69,7 @@ def fit_model(data: pd.Series, model: rv_continuous, plot_range: tuple = (120, 3
     plt.plot(x, d.pdf(x), color="orange")
 
 
-def get_train_set(people: pd.DataFrame, zero_k: bool = False):
-    """Return people from before this year"""
-    if zero_k:
-        people["0K"] = 0
 
-    marks_ls = _get_marks(marks_list=None, zero_k=zero_k, finish=True)
-    people = people[people["Year"] != 2023]
-    people_info = people[["Name", "Age", "M/F"]]
-    people_array = (np.array(people[marks_ls]) / 60).round(2)
-    return people_array, people_info
-
-
-def get_test_set(people: pd.DataFrame, zero_k: bool = False):
-    """Return people from this year"""
-    if zero_k:
-        people["0K"] = 0
-
-    marks_ls = _get_marks(marks_list=None, zero_k=zero_k, finish=True)
-    people = people[people["Year"] == 2023]
-    people_info = people[["Name", "Age", "M/F"]]
-    people_array = (np.array(people[marks_ls]) / 60).round(2)
-    return people_array, people_info
-
-
-def store_initial_prior(finish: np.array, max_time: int = 500, path: str = "processed_data/informed_prior.csv"):
-    """Store the initial prior distribution from data in a file"""
-    # counts = dict((data["Finish Net"] // 60).value_counts())
-    counts = dict(enumerate(np.bincount(finish.astype(int))))
-    counts = [counts[idx] if idx in counts.keys() else 0 for idx in range(max_time)]
-    prior = np.array(counts) / sum(counts)
-    prior.tofile(path, sep=',')
-    return prior
-
-
-def _prior_dist(informed: bool = True, max_time: int = 500) -> np.array:
-    """Returns the prior distribution for the runner as a numpy array"""
-    if informed:
-        prior = np.loadtxt("processed_data/informed_prior.csv", delimiter=',')
-    else:
-        prior = np.ones(max_time) / max_time
-
-    return prior
 
 
 def _get_marks(marks_list: Union[list, None], zero_k: bool = False, finish: bool = False):
@@ -125,15 +85,72 @@ def _get_marks(marks_list: Union[list, None], zero_k: bool = False, finish: bool
     return marks_ls
 
 
-def _get_intersection(a1, a2) -> np.array:
-    if len(a1) == 286777:
-        return a2
-    if len(a2) == 286777:
-        return a1
-    if len(a1) < len(a2):
-        return a1.intersection(a2)
-    else:
-        return a1.intersection(a2)
+#######
+# was in utilsb.py
+
+marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+
+last_map = {
+    "10K": "5K", "15K": "10K", "20K": "15K",
+    "25K": "20K", "30K": "25K", "35K": "30K",
+    "40K": "35K", "Finish Net": 42_195,
+}
+
+conv1 = {
+    "5K": 5_000, "10K": 10_000, "15K": 15_000, 
+    "20K": 20_000, "25K": 25_000, "30K": 30_000,
+    "35K": 35_000, "40K": 40_000, "Finish Net": 42_195,
+}
+
+def time_to_pace(time, dist):
+    secs = time * 60
+    return conv1[dist] / secs
+
+
+def pace_to_time(pace, dist):
+    secs = conv1[dist] / pace
+    return secs / 60
+
+def process_df(data):
+    new_idx, new_dist, new_mark, new_fin, new_last = [], [], [], [], []
+    new_age, new_gender, new_year = [], [], []
+    for dist in marks:
+        new_idx.extend(list(data.index))
+        new_dist.extend([dist] * len(data))
+        new_mark.extend(conv1[dist] / data[dist])
+        new_fin.extend(conv1["Finish Net"] / data["Finish Net"])
+        if dist == "5K":
+            last = data["5K"]
+        else:
+            last = data[dist] - data[last_map[dist]]
+        new_last.extend(conv1["5K"] / last)
+        
+        new_age.extend(data["Age"])
+        new_gender.extend(data["M/F"])
+        new_year.extend(data["Year"])
+
+    return pd.DataFrame({
+        "id": new_idx, "dist": new_dist, "curr_pace": new_last, "total_pace": new_mark, "finish": new_fin,
+        "age": new_age, "gender": new_gender, "year": new_year, 
+    })
+
+def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_tup=(2022, 2023), test_tup=(2023, 2024)):
+    d = pd.read_csv(filepath)
+    xtrain = process_df(d[d["Year"].isin(range(*train_tup))])
+    xtest = process_df(d[d["Year"].isin(range(*test_tup))])
+
+    train_ids = random.sample(set(xtrain["id"]), size_train)
+    xtrain = xtrain[xtrain["id"].isin(train_ids)]
+
+    test_ids = random.sample(set(xtest["id"]), size_test)
+    xtest = xtest[xtest["id"].isin(test_ids)]
+
+    # xtrain = xtrain.groupby('dist', group_keys=False).apply(lambda x: x.sample(size_train))
+    # xtest = xtest.groupby('dist', group_keys=False).apply(lambda x: x.sample(size_test))
+    # nucr_test = process_df(pd.read_csv("nucr_runners.csv"))
+    return xtrain, xtest,#nucr_test
+
+#######
 
 
 if __name__ == '__main__':
