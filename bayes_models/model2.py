@@ -89,7 +89,7 @@ class LinearModel(ModelBuilder):
                 pm.set_data({"y_data": y.values if isinstance(y, pd.Series) else y})
 
     @staticmethod
-    def get_default_model_config() -> Dict:
+    def default_model_config() -> Dict:
         """
         Returns a class default config dict for model builder if no model_config is provided on class initialization.
         The model config dict is generally used to specify the prior values we want to build the model with.
@@ -108,7 +108,7 @@ class LinearModel(ModelBuilder):
         return model_config
 
     @staticmethod
-    def get_default_sampler_config() -> Dict:
+    def default_sampler_config() -> Dict:
         """
         Returns a class default sampler dict for model builder if no sampler_config is provided on class initialization.
         The sampler config dict is used to send parameters to the sampler .

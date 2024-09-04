@@ -89,26 +89,6 @@ class RaceSplits():
         return np.concatenate([array1, array2])
 
 
-# if __name__ == "__main__":
-#     marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-#     print(marks.index("15K"))
-
-#     rs = RaceSplits()
-#     # print('paces', rs.get_paces())
-#     print('curr_dist', rs.curr_dist, rs.show_next_dist())
-#     rs.update_pace("15:45")
-
-#     # print('paces', rs.get_paces())
-#     print('curr_dist', rs.curr_dist, rs.show_next_dist())
-#     rs.update_pace("32:12")
-#     rs.update_pace("49:57")
-#     rs.get_person_dict()
-#     rs.update_pace("64:45")
-#     rs.update_pace("64:46")
-#     # rs.update_pace("63:45")
-#     rs.get_person_dict()
-#     print('s', rs.get_stored_paces())
-
 
 def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
     percentiles = np.percentile(info, [2.5, 10, 25, 50, 75, 90, 97.5], axis=1)
@@ -169,4 +149,23 @@ def get_race_for_person(num, train_data,) -> RaceSplits:
     person_race = RaceSplits()
     person_race.update_all_splits(times)
     return person_race, actual
+
+#     marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+#     print(marks.index("15K"))
+
+#     rs = RaceSplits()
+#     # print('paces', rs.get_paces())
+#     print('curr_dist', rs.curr_dist, rs.show_next_dist())
+#     rs.update_pace("15:45")
+
+#     # print('paces', rs.get_paces())
+#     print('curr_dist', rs.curr_dist, rs.show_next_dist())
+#     rs.update_pace("32:12")
+#     rs.update_pace("49:57")
+#     rs.get_person_dict()
+#     rs.update_pace("64:45")
+#     rs.update_pace("64:46")
+#     # rs.update_pace("63:45")
+#     rs.get_person_dict()
+#     print('s', rs.get_stored_paces())
 
