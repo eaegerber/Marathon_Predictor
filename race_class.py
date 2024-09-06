@@ -64,13 +64,9 @@ class RaceSplits():
         return person_dict
     
 
-    def posterior_array(self, models: list, traces: list, show: list = ["10K", "15K"]):
+    def posterior_array(self, model1, trace1, show: list = ["10K", "15K"]):
         info = self.get_stored_paces()
         info = info[info["dist"].isin(show)]
-
-        model1, model2 = models
-        trace1, trace2 = traces
-
 
         first_split = info[info["dist"] == "5K"]
         # return model1.prediction(info, trace1)
@@ -79,7 +75,7 @@ class RaceSplits():
 
         other_splits = info[info["dist"] != "5K"]
         if other_splits.shape[0] > 0:
-            array2 = model2.prediction(other_splits, trace2, progressbar=False)
+            array2 = model1.prediction(other_splits, trace1, progressbar=False)
         else:
             return array1
 
@@ -101,8 +97,8 @@ def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
 
 def get_from_info(
     race: RaceSplits,
-    models: list,
-    traces: list,
+    model1,
+    trace1,
     name: str = "",
     actual=None,
     show: list = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
@@ -114,7 +110,7 @@ def get_from_info(
     # print('d', shows)
     fig = plt.figure(figsize=(12, 10))
 
-    p_array = race.posterior_array(models, traces, shows)
+    p_array = race.posterior_array(model1, trace1, shows)
     percentile_info = table_info(p_array, show=shows)
     
     table = []

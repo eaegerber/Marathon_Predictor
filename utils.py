@@ -2,18 +2,17 @@
 # utils.py: utility functions
 
 import numpy as np
-import random
 import arviz as az
 import pandas as pd
-from typing import Union
 import matplotlib.pyplot as plt
 from scipy.stats import rv_continuous, norm
 from bayes_models.model1 import LinearModel as LinearModel1
 from bayes_models.model2 import LinearModel as LinearModel2
 from bayes_models.model3 import LinearModel as LinearModel3
 
+np.random.seed(2024)
 
-def str_to_int_time(time: str) -> Union[int, None]:
+def str_to_int_time(time: str):#  -> Union[int, None]:
     """Convert string time (HH:MM:SS) to int time"""
     try:
         times = time.split(":")[::-1]
@@ -25,7 +24,7 @@ def str_to_int_time(time: str) -> Union[int, None]:
         return None
 
 
-def int_to_str_time(time: int) -> Union[str, None]:
+def int_to_str_time(time: int):#  -> Union[str, None]:
     """Convert int time (in mins) to str time"""
     mins = int(time % 60)
     hrs = int((time - mins) / 60)  # should be int
@@ -42,7 +41,7 @@ def plot_dist(
         data: pd.DataFrame,
         checkpoint: str = "Finish Net",
         ticks: tuple = (60, 120, 180, 240, 300, 360, 420),
-        save: Union[str, None] = None
+        save = None #: Union[str, None] = None
 ) -> None:
     """Plot the distribution for a given checkpoint"""
     plt.figure(figsize=(10, 8))
@@ -74,19 +73,6 @@ def fit_model(data: pd.Series, model: rv_continuous, plot_range: tuple = (120, 3
 
 
 
-
-
-def _get_marks(marks_list: Union[list, None], zero_k: bool = False, finish: bool = False):
-    """Order and return the subset of marks specified in marks_list"""
-    all_marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
-    if not marks_list:
-        marks_list = all_marks
-    marks_ls = [m for m in all_marks if m in marks_list]
-    if zero_k and marks_ls[0] != "0K":
-        marks_ls = ["0K"] + marks_list  # TODO fix
-    if finish:
-        marks_ls = marks_ls + ["Finish Net"]
-    return marks_ls
 
 
 #######
@@ -143,10 +129,10 @@ def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_t
     xtrain = process_df(d[d["Year"].isin(range(*train_tup))])
     xtest = process_df(d[d["Year"].isin(range(*test_tup))])
 
-    train_ids = random.sample(set(xtrain["id"]), size_train)
+    train_ids = np.random.choice(np.array(list(set(xtrain["id"]))), size_train, replace=False)
     xtrain = xtrain[xtrain["id"].isin(train_ids)]
 
-    test_ids = random.sample(set(xtest["id"]), size_test)
+    test_ids = np.random.choice(np.array(list(set(xtest["id"]))), size_test, replace=False)
     xtest = xtest[xtest["id"].isin(test_ids)]
 
     # xtrain = xtrain.groupby('dist', group_keys=False).apply(lambda x: x.sample(size_train))
@@ -155,6 +141,10 @@ def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_t
     return xtrain, xtest,#nucr_test
 
 #######
+
+def get_model_and_trace(model1 = "traces/linear_model1.nc", trace1 = "traces/linear_trace1.nc",):
+    return LinearModel1.load(model1), az.from_netcdf(trace1)
+
 
 def get_models_and_traces(
     # LinearModel1,

@@ -2,8 +2,8 @@
     "https://api.shinyapps.io": {
         "server_url": "https://api.shinyapps.io",
         "filename": "/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor",
-        "app_url": "https://bonyejekwe.shinyapps.io/Marathon/",
-        "app_id": 11747433,
+        "app_url": "https://bonyejekwe.shinyapps.io/marathon_predictor/",
+        "app_id": 12625745,
         "app_guid": null,
         "title": "Marathon_Predictor",
         "app_mode": "python-shiny",

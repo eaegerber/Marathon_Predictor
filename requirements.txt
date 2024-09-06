@@ -7,3 +7,5 @@ seaborn
 bambi
 arviz
 faicons
+typing
+pymc_experimental

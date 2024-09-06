@@ -4,10 +4,10 @@ from shiny import reactive
 from shiny.express import input, render, ui
 
 import pandas as pd
-from utils import int_to_str_time, get_models_and_traces
+from utils import int_to_str_time, get_model_and_trace
 from race_class import RaceSplits, get_from_info, get_race_for_person
 
-models, traces = get_models_and_traces()
+model1, trace1 = get_model_and_trace()
 
 nucr_filename = "processed_data/nucr_runners.csv"
 nucr = pd.read_csv(nucr_filename)
@@ -35,7 +35,7 @@ with ui.nav_panel("My Plot"):
         def get_info1():
             # print('hi', race_splits.show_next_dist())
             race_splits.update_pace(input.runner_split1())
-            fig, table = get_from_info(race_splits, models=models, traces=traces, show=marks)                                       
+            fig, table = get_from_info(race_splits, model1=model1, trace1=trace1, show=marks)                                       
             # ui.update_text("runner_split1", f"Input split for {race_splits.show_next_dist()}", 0)
             return fig, table
                                      
@@ -76,7 +76,7 @@ with ui.nav_panel("NUCR Plots"):
             i = mapping[name]
 
             race, actual = get_race_for_person(i, nucr)
-            fig, table = get_from_info(race, models=models, traces=traces, show=input.splits_list0(), actual=actual)
+            fig, table = get_from_info(race, model1=model1, trace1=trace1, show=input.splits_list0(), actual=actual)
             return fig, table, actual
                                      
         with ui.card(full_screen=True):
