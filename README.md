@@ -1,7 +1,7 @@
 # Marathon_Predictor
 Bayesian model for in-race marathon finish time predictions.
 
-Code for the paper **Quantifying Uncertainty in Live Marathon Finish Time Predictions**
+Code for the paper [Quantifying Uncertainty in Live Marathon Finish Time Predictions](https://github.com/bonyejekwe/Marathon_Predictor/blob/main/paper.pdf)
 
 **Abstract:** In the middle of a marathon, a runner’s expected finish time is commonly estimated by extrapolating the average pace covered so far, assuming it to be constant for the rest of the race. These predictions have two key issues: the 
 estimates do not consider the in-race context that can determine if a runner is likely to finish faster or slower than 
