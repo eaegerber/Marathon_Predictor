@@ -10,3 +10,5 @@ to address these issues: Bayesian linear regression and quantile regression. Bot
 splits in the race and allow us to quantify uncertainty around the predicted finish times. We utilized 15 years of Boston 
 Marathon data (312,805 runners total) to evaluate and compare both approaches. Finally, we developed an app for runners to 
 visualize their estimated finish distribution in real time.
+
+To set up and run project locally, follow the steps in `analysis.ipynb`.
