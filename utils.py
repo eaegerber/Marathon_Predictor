@@ -102,11 +102,12 @@ def pace_to_time(pace, dist):
     return secs / 60
 
 def process_df(data):
-    new_idx, new_dist, new_mark, new_fin, new_last = [], [], [], [], []
+    new_idx, new_dist, new_mark, new_fin, new_last, new_prop = [], [], [], [], [], []
     new_age, new_gender, new_year = [], [], []
     for dist in marks:
         new_idx.extend(list(data.index))
         new_dist.extend([dist] * len(data))
+        new_prop.extend([conv1[dist] / conv1["Finish Net"]] * len(data))
         new_mark.extend(conv1[dist] / data[dist])
         new_fin.extend(conv1["Finish Net"] / data["Finish Net"])
         if dist == "5K":
@@ -121,7 +122,7 @@ def process_df(data):
 
     return pd.DataFrame({
         "id": new_idx, "dist": new_dist, "curr_pace": new_last, "total_pace": new_mark, "finish": new_fin,
-        "age": new_age, "gender": new_gender, "year": new_year, 
+        "age": new_age, "gender": new_gender, "year": new_year, "prop": new_prop
     })
 
 def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_tup=(2022, 2023), test_tup=(2023, 2024)):
