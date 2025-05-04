@@ -4,8 +4,6 @@ pandas
 matplotlib
 scipy
 seaborn
-bambi
 arviz
 faicons
 typing
-pymc_experimental

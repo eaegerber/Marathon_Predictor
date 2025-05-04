@@ -6,9 +6,6 @@ import arviz as az
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import rv_continuous, norm
-from bayes_models.model1 import LinearModel as LinearModel1
-from bayes_models.model2 import LinearModel as LinearModel2
-from bayes_models.model3 import LinearModel as LinearModel3
 
 np.random.seed(2024)
 
@@ -143,54 +140,10 @@ def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_t
 
 #######
 
-def get_model_and_trace(model1 = "traces/linear_model1.nc", trace1 = "traces/linear_trace1.nc",):
-    return LinearModel1.load(model1), az.from_netcdf(trace1)
 
 
-def get_models_and_traces(
-    # LinearModel1,
-    # LinearModel2,
-    model1 = "traces/linear_model1.nc",
-    trace1 = "traces/linear_trace1.nc",
-    model2 = "traces/linear_model2.nc",
-    trace2 = "traces/linear_trace2.nc",
-    model3: bool = False,
 
-):
-    models = [LinearModel1.load(model1), LinearModel2.load(model2)]
-    traces = [az.from_netcdf(trace1), az.from_netcdf(trace2)]
 
-    if model3:
-        models.append(LinearModel1.load("traces/linear_model3.nc"))
-        traces.append(az.from_netcdf("traces/linear_trace3.nc"))
-    
-    return models, traces
-
-def reset_traces_and_models(
-        train_data,
-        model1 = "traces/linear_model1.nc",
-        trace1 = "traces/linear_trace1.nc",
-        model2 = "traces/linear_model2.nc",
-        trace2 = "traces/linear_trace2.nc",
-):
-    sampler_config1 = {"draws": 1_000,"tune": 1_000,"chains": 2,"target_accept": 0.95}
-    sampler_config2 ={'draws': 1_000, 'tune': 1_000, 'chains': 2, 'target_accept': 0.95}
-    model_config1 = {"b0_mu_prior": 0, "b0_sigma_prior": 5, "b1_mu_prior": 0, "b1_sigma_prior": 5, "sigma_beta_prior": 2}
-    model_config2 = {"b0_mu_prior": 0,  "b0_sigma_prior": 5,  "b1_mu_prior": 0,  "b1_sigma_prior": 5, 
-                     "b2_mu_prior": 0,  "b2_sigma_prior": 5,  "sigma_beta_prior": 2}
-    
-    m1 = LinearModel1(model_config=model_config1, sampler_config=sampler_config1)
-    m2 = LinearModel2(model_config=model_config2, sampler_config=sampler_config2)
-    
-    t1 = m1.fit(train_data, train_data["finish"])
-    t2 = m2.fit(train_data, train_data["finish"])
-
-    m1.save(model1)
-    t1.to_netcdf(trace1)
-
-    m2.save(model2)
-    t2.to_netcdf(trace2)
-    return [m1, m2], [t1, t2]
 
 if __name__ == '__main__':
     df = pd.read_csv("processed_data/full_data_secs.csv")

@@ -4,7 +4,11 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1
+from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, full_predictions
+
+marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+stan_results1 = pd.read_csv("stan_results/bayes1/ps_result.csv")
+sep_results2 = {mk: pd.read_csv(f"stan_results/bayes2/ps_result{mk}.csv") for mk in marks}
 
 
 class RaceSplits():
@@ -17,6 +21,7 @@ class RaceSplits():
         self.curr_pace = 0
         self.curr_time: int = 0
         self.stored_paces = []
+        self.prop = 0
 
     def next_dist(self):
         new_dist = {"0K": "5K", "5K": "10K", "10K": "15K", "15K": "20K", "20K": "25K", "25K": "30K", 
@@ -34,7 +39,7 @@ class RaceSplits():
 
     
     def get_paces(self):
-        return self.curr_dist, self.curr_pace, self.total_pace
+        return self.curr_dist, self.curr_pace, self.total_pace, self.prop
     
     def update_pace(self, time: str):
         self.next_dist()
@@ -46,6 +51,7 @@ class RaceSplits():
         # print('inside: ', self.curr_time, last_time)
         diff = (self.curr_time - last_time)
         self.curr_pace = conv1["5K"] / diff
+        self.prop = conv1[self.curr_dist] / conv1["Finish Net"]
         self.stored_paces.append(self.get_paces())
         # self.next_dist()  # update curr_dist
 
@@ -54,7 +60,7 @@ class RaceSplits():
             self.update_pace(time)
 
     def get_stored_paces(self):
-        return pd.DataFrame(self.stored_paces, columns=["dist", "curr_pace", "total_pace"])
+        return pd.DataFrame(self.stored_paces, columns=["dist", "curr_pace", "total_pace", "prop"])
     
     def get_person_dict(self):
         person = self.get_stored_paces()
@@ -64,27 +70,12 @@ class RaceSplits():
         return person_dict
     
 
-    def posterior_array(self, model1, trace1, show: list = ["10K", "15K"]):
+    def posterior_array(self, show: list = ["10K", "15K"]):
         info = self.get_stored_paces()
-        info = info[info["dist"].isin(show)]
-
-        first_split = info[info["dist"] == "5K"]
-        # return model1.prediction(info, trace1)
-        if first_split.shape[0] == 1:
-            array1 = model1.prediction(first_split, trace1, progressbar=False)
-
-        other_splits = info[info["dist"] != "5K"]
-        if other_splits.shape[0] > 0:
-            array2 = model1.prediction(other_splits, trace1, progressbar=False)
-        else:
-            return array1
-
-        if first_split.shape[0] != 1:
-            return array2
-        
-        return np.concatenate([array1, array2])
-
-
+        info = info[info["dist"].isin(show)] 
+        # return (42195 / 60) / full_predictions(info, stan_results1, feats_lis = ["total_pace", "prop"], beta_lis = ["beta.1", "beta.2"])
+        return (42195 / 60) / np.concatenate([full_predictions(info[info["dist"] == mk], sep_results2[mk],
+                feats_lis = ["total_pace", "curr_pace"], beta_lis = ["beta.1", "beta.2"]) for mk in show])
 
 def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
     percentiles = np.percentile(info, [2.5, 10, 25, 50, 75, 90, 97.5], axis=1)
@@ -97,8 +88,6 @@ def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
 
 def get_from_info(
     race: RaceSplits,
-    model1,
-    trace1,
     name: str = "",
     actual=None,
     show: list = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
@@ -110,7 +99,7 @@ def get_from_info(
     # print('d', shows)
     fig = plt.figure(figsize=(12, 10))
 
-    p_array = race.posterior_array(model1, trace1, shows)
+    p_array = race.posterior_array(shows)
     percentile_info = table_info(p_array, show=shows)
     
     table = []
