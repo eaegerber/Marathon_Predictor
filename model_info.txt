@@ -1,0 +1,23 @@
+#https://aidanrussellcom.wordpress.com/2019/01/14/pystan-tutorial-1/
+
+# TODO try larger dataset
+
+# # Here: run from R file to populate /stan_results
+
+# rs_results1: no propleft:  finish ~ N(alpha + beta * feats, sigma);
+# rs_result1a: feats = [total_pace]
+# rs_result1b: feats = [total_pace, curr_pace]
+# rs_result1c: feats = [total_pace, prop]
+# rs_result1d: feats = [total_pace, curr_pace, prop]
+
+# rs_results2: propleft:  finish ~ N(alpha + beta * feats, sigma * propleft);
+# rs_result2a: feats = [total_pace]
+# rs_result2b: feats = [total_pace, curr_pace]
+# rs_result2c: feats = [total_pace, prop]
+# rs_result2d: feats = [total_pace, curr_pace, prop]
+
+# rs_results3: additional features:  finish ~ N(alpha + beta * feats, sigma * propleft);
+# rs_result3a: feats = [total_pace, curr_pace, prop, propxcurr]
+# rs_result3b: feats = [total_pace, curr_pace, prop, propxcurr, male]
+
+# ...
