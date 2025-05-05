@@ -4,11 +4,10 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, full_predictions
+from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_preds
 
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-stan_results1 = pd.read_csv("stan_results/bayes1/ps_result.csv")
-sep_results2 = {mk: pd.read_csv(f"stan_results/bayes2/ps_result{mk}.csv") for mk in marks}
+stan_results = pd.read_csv("stan_results/rs_result3a.csv")
 
 
 class RaceSplits():
@@ -73,9 +72,15 @@ class RaceSplits():
     def posterior_array(self, show: list = ["10K", "15K"]):
         info = self.get_stored_paces()
         info = info[info["dist"].isin(show)] 
-        # return (42195 / 60) / full_predictions(info, stan_results1, feats_lis = ["total_pace", "prop"], beta_lis = ["beta.1", "beta.2"])
-        return (42195 / 60) / np.concatenate([full_predictions(info[info["dist"] == mk], sep_results2[mk],
-                feats_lis = ["total_pace", "curr_pace"], beta_lis = ["beta.1", "beta.2"]) for mk in show])
+        info['propxcurr'] = info["prop"] * info["curr_pace"]
+        info['propleft'] = 1 - info['prop']
+        preds = (42195 / 60) / get_preds(
+                                    info, stan_results, 
+                                    feats_lis = ["total_pace", "curr_pace", "prop", "propxcurr"], 
+                                    beta_lis = ["beta[1]", "beta[2]", "beta[3]", "beta[4]"],
+                                    propleft=True, full=True
+                                )
+        return preds
 
 def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
     percentiles = np.percentile(info, [2.5, 10, 25, 50, 75, 90, 97.5], axis=1)
@@ -134,6 +139,19 @@ def get_race_for_person(num, train_data,) -> RaceSplits:
     person_race = RaceSplits()
     person_race.update_all_splits(times)
     return person_race, actual
+
+
+if __name__ == "__main__":
+    print('is')
+
+    nucr_filename = "processed_data/nucr_runners.csv"
+    nucr = pd.read_csv(nucr_filename)
+    race, time = get_race_for_person(0, train_data=nucr)
+    print(time)
+    print(race)
+    fig, table = get_from_info(race, actual=time)
+    print(table)
+
 
 #     marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
 #     print(marks.index("15K"))

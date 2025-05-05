@@ -69,9 +69,6 @@ def fit_model(data: pd.Series, model: rv_continuous, plot_range: tuple = (120, 3
     plt.plot(x, d.pdf(x), color="orange")
 
 
-
-
-
 #######
 # was in utilsb.py
 
@@ -140,8 +137,33 @@ def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_t
 
 #######
 
+def get_preds(test_data, stan_data, feats_lis, beta_lis, name="stan_pred", propleft=False, full=False):
+    test_new = test_data.copy()
+    d1 = test_new[feats_lis]
+    d2 = stan_data[beta_lis].T.copy()
 
+    norm_mean = stan_data["alpha"] + d1.dot(d2.values)
+    if propleft: 
+        norm_std = np.outer(test_new["propleft"], stan_data["sigma"])
+    else:
+        norm_std = stan_data["sigma"]
+    preds = np.random.normal(norm_mean, norm_std)
+    
+    if full:
+        return preds
+    else:
+        preds = preds.mean(axis=1)
+        test_new[name] = preds
+        return test_new 
+    
 
+def get_table(test_data, old="stan_pred", new="stan"):
+    y_true = (42195 / 60) / test_data["finish"]
+    preds = (42195 / 60) / test_data[old]
+    extrap = (42195 / 60) / test_data["total_pace"]
+    test_data[new] = preds - y_true
+    test_data["extrap"] = extrap - y_true
+    return test_data
 
 
 

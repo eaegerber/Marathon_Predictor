@@ -16,7 +16,7 @@ schools_dat <- list(N = nrow(train_data),
 fit <- stan(file = '/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/marathon.stan', data = schools_dat)
 d <- as.data.frame(fit)
 typeof(d)
-write.csv(d,"/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/stan_results/rs_result91.csv", row.names = TRUE)
+write.csv(d,"/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/stan_results/rs_result_1.csv", row.names = TRUE)
 getwd()
 
 
