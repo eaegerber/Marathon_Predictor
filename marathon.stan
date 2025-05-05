@@ -18,4 +18,5 @@ model {
 
   // model
   finish ~ normal(feats * beta + alpha, sigma * propleft);
+  // finish ~ normal(feats * beta + alpha, sigma);
 }
