@@ -3,6 +3,7 @@ data {
   int<lower=0> K;
   matrix[N, K] feats;
   vector[N] finish;
+  vector[N] propleft;
 }
 parameters {
   real alpha;
@@ -16,5 +17,5 @@ model {
   sigma ~ cauchy(0, 2.5); 
 
   // model
-  finish ~ normal(feats * beta + alpha, sigma);
+  finish ~ normal(feats * beta + alpha, sigma * propleft);
 }
