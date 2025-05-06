@@ -4,8 +4,7 @@
 # example(stan_model, package = "rstan", run.dontrun = TRUE)
 library("rstan") # observe startup messages
 train_data <- read.csv("/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/train.csv")
-# features <- c("total_pace", "prop")
-features <- c("total_pace", "curr_pace", "prop", "propxcurr", "gender")
+features <- c("total_pace", "curr_pace", "prop") #, "propxcurr", "male", "age", "malexage")
 
 schools_dat <- list(N = nrow(train_data),
                     K = length(features),
@@ -15,9 +14,8 @@ schools_dat <- list(N = nrow(train_data),
 
 fit <- stan(file = '/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/marathon.stan', data = schools_dat)
 d <- as.data.frame(fit)
-typeof(d)
-write.csv(d,"/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/stan_results/rs_result_1.csv", row.names = TRUE)
-getwd()
+write.csv(d,"/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/stan_results/rs_result2dw.csv", row.names = TRUE)
+# getwd()
 
 
 
