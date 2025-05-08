@@ -2,7 +2,6 @@
 # utils.py: utility functions
 
 import numpy as np
-import arviz as az
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import rv_continuous, norm
@@ -23,10 +22,10 @@ def str_to_int_time(time: str):#  -> Union[int, None]:
 
 def int_to_str_time(time: int):#  -> Union[str, None]:
     """Convert int time (in mins) to str time"""
-    mins = int(time % 60)
-    hrs = int((time - mins) / 60)  # should be int
-    hrs, mins = str(hrs).zfill(2), str(mins).zfill(2)
-    return hrs + ":" + mins
+    secs = int(time % 60)
+    mins = int((time - secs) / 60)  # should be int
+    mins, secs = str(mins).zfill(2), str(secs).zfill(2)
+    return mins + ":" + secs
 
 
 def binning(data: pd.Series):
@@ -139,7 +138,7 @@ def get_data(filepath="full_data_secs.csv", size_train=50, size_test=50, train_t
 
 def get_preds(test_data, stan_data, feats_lis, beta_lis, name="stan_pred", propleft=False, full=False):
     test_new = test_data.copy()
-    d1 = test_new[feats_lis]
+    d1 = test_new[feats_lis].copy()
     d2 = stan_data[beta_lis].T.copy()
 
     norm_mean = stan_data["alpha"] + d1.dot(d2.values)
@@ -164,7 +163,6 @@ def get_table(test_data, old="stan_pred", new="stan"):
     test_data[new] = preds - y_true
     test_data["extrap"] = extrap - y_true
     return test_data
-
 
 
 if __name__ == '__main__':
