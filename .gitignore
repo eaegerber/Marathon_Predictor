@@ -162,3 +162,5 @@ cython_debug/
 .DS_Store
 /processed_data/train.csv
 /processed_data/test.csv
+.Rproj.user
+Marathon_Predictor.Rproj
