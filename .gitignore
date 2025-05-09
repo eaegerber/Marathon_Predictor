@@ -160,4 +160,5 @@ cython_debug/
 .idea/
 
 .DS_Store
-/traces/*.nc
+/processed_data/train.csv
+/processed_data/test.csv

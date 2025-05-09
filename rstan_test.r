@@ -3,7 +3,7 @@
 # install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)
 # example(stan_model, package = "rstan", run.dontrun = TRUE)
 library("rstan") # observe startup messages
-train_data <- read.csv("/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/train.csv")
+train_data <- read.csv("/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/processed_data/train.csv")
 features <- c("total_pace", "curr_pace", "prop") #, "propxcurr", "male", "age", "malexage")
 
 schools_dat <- list(N = nrow(train_data),
