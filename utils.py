@@ -165,6 +165,22 @@ def get_table(test_data, old="stan_pred", new="stan"):
     test_data["extrap"] = extrap - y_true
     return test_data
 
+def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_errors"):
+    colors = [f"C{i}" for i in range(len(labels))]
+    styles = '--'
+    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+    table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
+    table_group.plot(label=table_group.columns,  style=styles, linewidth=3, grid=True, alpha=0.75, color=colors)
+
+    plt.xlabel("Distance Into Race")
+    plt.ylabel("Prediction Error (RMSE)")
+    plt.xticks(rotation=60)
+    plt.title("Average Error For Each Model")
+    plt.grid(True)
+    plt.legend()
+    plt.savefig(f"analysis/{save_name}.png", bbox_inches="tight")
+    return table_group
+
 
 
 if __name__ == '__main__':
