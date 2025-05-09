@@ -5,7 +5,7 @@
         "app_url": "https://bonyejekwe.shinyapps.io/marathon_predictor/",
         "app_id": 12625745,
         "app_guid": null,
-        "title": "Marathon_Predictor",
+        "title": "Marathon",
         "app_mode": "python-shiny",
         "app_store_version": 1
     }
