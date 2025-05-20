@@ -19,5 +19,12 @@
 # rs_results3: additional features:  finish ~ N(alpha + beta * feats, sigma * propleft);
 # rs_result3a: feats = [total_pace, curr_pace, prop, propxcurr]
 # rs_result3b: feats = [total_pace, curr_pace, prop, propxcurr, male]
-
+# rs_result3c: feats = [total_pace, curr_pace, prop, propxcurr, age]
+# rs_result3c: feats = [total_pace, curr_pace, prop, propxcurr, male, age]
 # ...
+
+2d1: train=10; time=53s
+2d2: train=100; time=88s
+2d3: train=1000; time=853s
+2d4: train=256; time=201s
+2d5: train=512; time=392s

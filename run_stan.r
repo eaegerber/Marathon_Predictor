@@ -3,9 +3,8 @@
 # install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)
 # example(stan_model, package = "rstan", run.dontrun = TRUE)
 library("rstan") # observe startup messages
-train_data <- read.csv("/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/train.csv")
-# features <- c("total_pace", "prop")
-features <- c("total_pace", "curr_pace", "prop", "propxcurr", "gender")
+train_data <- read.csv("processed_data/train.csv")
+features <- c("total_pace", "curr_pace", "prop") #, "propxcurr", "male", "age", "malexage")
 
 schools_dat <- list(N = nrow(train_data),
                     K = length(features),
@@ -13,10 +12,9 @@ schools_dat <- list(N = nrow(train_data),
                     propleft = train_data$propleft,
                     finish = train_data$finish)
 
-fit <- stan(file = '/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/marathon.stan', data = schools_dat)
+fit <- stan(file = 'marathon.stan', data = schools_dat)
 d <- as.data.frame(fit)
-typeof(d)
-write.csv(d,"/Users/brandononyejekwe/Documents/Personal_Projects/Marathon_Predictor/stan_results/rs_result_1.csv", row.names = TRUE)
+write.csv(d,"stan_results/rs_result2dw.csv", row.names = TRUE)
 getwd()
 
 
