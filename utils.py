@@ -3,6 +3,7 @@
 from typing import Union
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
@@ -152,18 +153,36 @@ def get_preds(test_data, stan_data, feats_lis, beta_lis, name="stan_pred", propl
         return preds
     else:
         preds = norm_mean.mean(axis=1) #preds.mean(axis=1)
+        return preds
         test_new[name] = preds
         return test_new 
     
 
-def get_table(test_data, old="stan_pred", new="stan"):
+def get_table(test_data, model_preds):
     """Get table that outpus all information to compare models"""
-    y_true = (42195 / 60) / test_data["finish"]
-    preds = (42195 / 60) / test_data[old]
-    extrap = (42195 / 60) / test_data["total_pace"]
-    test_data[new] = preds - y_true
-    test_data["extrap"] = extrap - y_true
-    return test_data
+    test_new = test_data.copy()
+    y_true = (42195 / 60) / test_new["finish"]
+    extrap = (42195 / 60) / test_new["total_pace"]
+    
+    test_new["extrap"] = extrap - y_true
+    for name, pred in model_preds.items():
+        test_new[name] = ((42195 / 60) / pred) - y_true
+
+    return test_new
+
+def other_plots(test_data, m_preds):
+    marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+    for mark in marks:
+        sns.kdeplot(test_data[test_data["dist"] == mark]["rstan2d"], label=mark)
+    plt.xlim(-20, 20)
+    plt.legend()
+    plt.show()
+
+    for m in m_preds:
+        sns.kdeplot(test_data[m], label=m)
+
+    plt.xlim(-20, 20)
+    plt.legend()
 
 def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_errors"):
     """Create table and plot to compare the RMSE for multiple mdoels. Labels specifies the
