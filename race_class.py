@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_preds
 
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-stan_results = pd.read_csv("stan_results/rs_result3a.csv")
+stan_results = pd.read_csv("stan_results/rs_result2d.csv")
 
 class RaceSplits():
 
@@ -58,8 +58,8 @@ class RaceSplits():
         info['propleft'] = 1 - info['prop']
         preds = (42195 / 60) / get_preds(
                                     info, stan_results, 
-                                    feats_lis = ["total_pace", "curr_pace", "prop", "propxcurr"], 
-                                    beta_lis = ["beta[1]", "beta[2]", "beta[3]", "beta[4]"],
+                                    feats_lis = ["total_pace", "curr_pace", "prop"],#, "propxcurr"], 
+                                    beta_lis = ["beta[1]", "beta[2]", "beta[3]"],#, "beta[4]"],
                                     propleft=True, full=True
                                 )
         return preds
