@@ -203,6 +203,8 @@ def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_error
     plt.grid(True)
     plt.legend()
     plt.savefig(f"analysis/{save_name}.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}.png")
+    plt.close()
     return table_group
 
 def add_intervals_to_test(data_tbl, m_preds, pred_names):
@@ -251,6 +253,8 @@ def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     leg2 = plt.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="lower right")
     ax.add_artist(leg2)
     plt.savefig("analysis/interval_check.png", bbox_inches="tight")
+    print("File saved: analysis/interval_check.png")
+    plt.close()
     return big_table
 
 
@@ -286,6 +290,8 @@ def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     ax.add_artist(leg2)
 
     plt.savefig("analysis/interval_sizes.png", bbox_inches="tight")
+    print("File saved: analysis/interval_sizes.png")
+    plt.close()
     return big_table
 
 if __name__ == '__main__':
