@@ -4,6 +4,10 @@ data {
   matrix[N, K] feats;
   vector[N] finish;
   vector[N] propleft;
+
+  int<lower=0> N_test;
+  matrix[N_test, K] feats_test;
+  vector[N_test] propleft_test;
 }
 parameters {
   real alpha;
@@ -18,5 +22,7 @@ model {
 
   // model
   finish ~ normal(feats * beta + alpha, sigma * propleft);
-  // finish ~ normal(feats * beta + alpha, sigma);
+}
+generated quantities {
+  vector[N_test] finish_test = to_vector(normal_rng(feats_test * beta + alpha, sigma * propleft_test));
 }

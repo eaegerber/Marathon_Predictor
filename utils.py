@@ -142,16 +142,16 @@ def get_preds(test_data, stan_data, feats_lis, beta_lis, name="stan_pred", propl
     d2 = stan_data[beta_lis].T.copy()
 
     norm_mean = stan_data["alpha"] + d1.dot(d2.values)
-    if propleft: 
-        norm_std = np.outer(test_new["propleft"], stan_data["sigma"])
-    else:
-        norm_std = stan_data["sigma"]
-    preds = np.random.normal(norm_mean, norm_std)
-    
+
     if full:
+        if propleft: 
+            norm_std = np.outer(test_new["propleft"], stan_data["sigma"])
+        else:
+            norm_std = stan_data["sigma"]
+        preds = np.random.normal(norm_mean, norm_std)
         return preds
     else:
-        preds = preds.mean(axis=1)
+        preds = norm_mean.mean(axis=1) #preds.mean(axis=1)
         test_new[name] = preds
         return test_new 
     
@@ -169,13 +169,13 @@ def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_error
     """Create table and plot to compare the RMSE for multiple mdoels. Labels specifies the
     models to be shown."""
     colors = [f"C{i}" for i in range(len(labels))]
-    styles = '--'
+    styles = '.-'
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
     table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
-    table_group.plot(label=table_group.columns,  style=styles, linewidth=3, grid=True, alpha=0.75, color=colors)
+    table_group.plot(label=table_group.columns, style=styles, linewidth=2, grid=True, alpha=0.8, color=colors)
 
-    plt.xlabel("Distance Into Race")
-    plt.ylabel("Prediction Error (RMSE)")
+    plt.xlabel("Distance Into Race (km)")
+    plt.ylabel("Prediction Error (RMSE), in minutes")
     plt.xticks(rotation=60)
     plt.title("Average Error For Each Model")
     plt.grid(True)
