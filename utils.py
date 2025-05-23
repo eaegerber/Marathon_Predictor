@@ -154,9 +154,12 @@ def get_preds(test_data, stan_data, feats_lis, beta_lis, name="stan_pred", propl
     else:
         preds = norm_mean.mean(axis=1) #preds.mean(axis=1)
         return preds
-        test_new[name] = preds
-        return test_new 
     
+def other_stats(data, finish):
+    """Return overall RMSE and R-squared values for specified columns in data"""
+    ftime = (42195/60) / finish
+    tss = (((ftime) - (ftime).mean()) ** 2).sum()
+    return data.apply(lambda x: ((x ** 2).mean() ** 0.5, 1 - ((x ** 2).sum()/ tss)))  # overall rmse, rsquared
 
 def get_table(test_data, model_preds):
     """Get table that outpus all information to compare models"""
@@ -201,6 +204,18 @@ def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_error
     plt.legend()
     plt.savefig(f"analysis/{save_name}.png", bbox_inches="tight")
     return table_group
+
+def add_intervals_to_test(data_tbl, m_preds, pred_names):
+    data = data_tbl.copy()
+    for pred_name in pred_names:
+        for conf, lower, upper in [(50, 25, 75), (80, 10, 90), (95, 2.5, 97.5)]:
+            test_true = (42195 / 60) / data["finish"]
+            b1, b2 = np.percentile(m_preds[pred_name], [lower, upper], axis=1)
+            data[f"{pred_name}-lower{conf}"] = b1
+            data[f"{pred_name}-upper{conf}"] = b2
+            data[f"{pred_name}-size{conf}"] = b2 - b1
+            data[f"{pred_name}-in{conf}"] = (test_true < b2) & (test_true > b1)
+    return data
 
 
 def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
