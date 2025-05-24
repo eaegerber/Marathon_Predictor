@@ -73,4 +73,4 @@ def scrape_data(year):
 
 
 if __name__ == "__main__":
-    full_year_data = scrape_data("13")
+    full_year_data = scrape_data("25")
