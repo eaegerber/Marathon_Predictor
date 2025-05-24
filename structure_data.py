@@ -15,7 +15,7 @@ def process_raw_boston_data(
         yrs: list,
         store: bool = True,
         mins: bool = True,
-        path: str = "processed_data/full_boston_data.csv"
+        path: str = "processed_data/full_data_bos.csv"
 ) -> pd.DataFrame:
     """Preprocess raw_data into single df"""
     data_list = [_read_data_with_year(f"raw_data/boston/boston{year}.csv", year) for year in yrs]
@@ -42,4 +42,4 @@ def process_raw_boston_data(
 
 if __name__ == "__main__":
     years = ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "22", "23", "24", "25"]
-    process_raw_boston_data(yrs=years, store=True, mins=False, path="processed_data/full_boston_data.csv")
+    process_raw_boston_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")

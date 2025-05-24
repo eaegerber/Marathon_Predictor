@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_preds
 
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-stan_results = pd.read_csv("stan_results/rs_result2d.csv")
+stan_results = pd.read_csv("stan_results/params_bos0d.csv")
 
 class RaceSplits():
 

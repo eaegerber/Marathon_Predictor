@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from utils import get_data, binning, int_to_str_time#, Union
 random.seed(2024)
 
-train2, test = get_data(filepath="processed_data/full_boston_data.csv", size_train=286777,train_tup=(0, 2023), size_test=400)
+train2, test = get_data(filepath="processed_data/full_data_bos.csv", size_train=286777,train_tup=(0, 2023), size_test=400)
 ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540)
 minutes_dist = ((42195 / 60) / train2[train2["dist"] == "5K"]["finish"]) // 1
 bins = binning(minutes_dist)

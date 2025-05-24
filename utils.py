@@ -116,7 +116,7 @@ def process_df(data):
     new_df["malexage"] = new_df["male"] * new_df["age"]
     return new_df
 
-def get_data(filepath="full_boston_data.csv", size_train=50, size_test=50, train_tup=(2022, 2023), test_tup=(2023, 2024)):
+def get_data(filepath="full_data_bos.csv", size_train=50, size_test=50, train_tup=(2022, 2023), test_tup=(2023, 2024)):
     """Get and process data from filepath. After processing data, this function samples the training and test data
     based on training and test data specifications for size and years. Returns train and test data"""
     d = pd.read_csv(filepath)
@@ -295,7 +295,7 @@ def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     return big_table
 
 if __name__ == '__main__':
-    df = pd.read_csv("processed_data/full_boston_data.csv")
+    df = pd.read_csv("processed_data/full_data_bos.csv")
     marks = ["5K", "10K", "15K", "20K", "HALF", "25K", "30K", "35K", "40K"]
     df[marks + ["Finish Net"]] = ((df[marks + ["Finish Net"]] // 60) + 1).astype(int)
     data_series = df["Finish Net"]
