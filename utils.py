@@ -59,7 +59,7 @@ def plot_dist(
     plt.ylabel("Frequency")
     plt.title(f"Distribution of Marathon {checkpoint} Times")
     if isinstance(save, str):
-        plt.savefig(f"plots/{save}.png")
+        plt.savefig(f"analysis/{save}.png")
 
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
 
