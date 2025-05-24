@@ -5,24 +5,30 @@ import matplotlib.pyplot as plt
 from utils import get_data, binning, int_to_str_time#, Union
 random.seed(2024)
 
-train2, test = get_data(filepath="processed_data/full_data_bos.csv", size_train=286777,train_tup=(0, 2023), size_test=400)
-ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540)
-minutes_dist = ((42195 / 60) / train2[train2["dist"] == "5K"]["finish"]) // 1
-bins = binning(minutes_dist)
-minutes_dist.hist(bins=bins)
-labels = [int_to_str_time(t) for t in ticks]
+ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660)
+train_list = [
+    ("bos", get_data(filepath="processed_data/full_data_bos.csv", size_train=366064, train_tup=(0, 2026), size_test=400)[0]),
+    ("nyc", get_data(filepath="processed_data/full_data_nyc.csv", size_train=24825, train_tup=(0, 2026), size_test=4)[0]),
+    # get_data(filepath="processed_data/full_data_nyc.csv", size_train=20825, train_tup=(0, 2026), size_test=4)[0],
+]
+
+for lbl, train_data in train_list:
+    minutes_dist = ((42195 / 60) / train_data[train_data["dist"] == "5K"]["finish"]) // 1
+    bins = binning(minutes_dist)
+    minutes_dist.hist(bins=bins, alpha=0.5, density=True, label=lbl)
+labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
 plt.xticks(ticks, labels=labels)
 plt.xlabel(f"Time (HH:MM)")
 plt.ylabel("Frequency")
 plt.title(f"Distribution of Marathon Finish Times")
+plt.legend()
 plt.savefig(f"analysis/plot_dist.png")
+plt.close()
 
+train2, _ = get_data(filepath="processed_data/full_data_bos.csv", size_train=366064, train_tup=(0, 2026), size_test=400)
 table1 = train2[train2["dist"].isin(["10K", "20K", "30K"])]
 table1[["total_pace", "finish"]] = table1[["total_pace", "finish"]].apply(lambda x: (42195 / 60) / x)
-table1
 
-from utils import int_to_str_time
-np.random.seed(2024)
 train_ids = np.random.choice(np.array(list(set(table1["id"]))), 1000, replace=False)
 table2 = table1[table1["id"].isin(train_ids)]
 
@@ -32,7 +38,7 @@ plt.xlabel("Finish Estimate Extrapolated from Total Pace So Far (HH:MM)")
 plt.ylabel("True Finish Time (HH:MM)")
 
 ticks = (100, 150, 200, 250, 300, 350, 400, 450)
-labels = [int_to_str_time(t) for t in ticks]
+labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
 plt.xticks(ticks, labels=labels)
 plt.yticks(ticks, labels=labels)
 

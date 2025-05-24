@@ -21,7 +21,7 @@ def str_to_int_time(time: str)  -> Union[int, None]:
         return None
 
 
-def int_to_str_time(time: int)  -> Union[str, None]:
+def int_to_str_time(time: int, no_secs: bool = False)  -> Union[str, None]:
     """Convert int time (in mins) to str time (MM:SS) or (HH:MM:SS)"""
     secs = int(time % 60)
     time2 = int((time - secs) / 60)  # should be int
@@ -33,6 +33,9 @@ def int_to_str_time(time: int)  -> Union[str, None]:
         mins = int((time2 % 60))
         hrs = int((time2 - mins) / 60)
         hrs, mins, secs = str(hrs).zfill(2), str(mins).zfill(2), str(secs).zfill(2)
+
+        if no_secs:
+            return hrs + ":" + mins
         return hrs + ":" + mins + ":" + secs
 
 
