@@ -33,7 +33,7 @@ params = {
     }
 
 
-def scrape_data(year):
+def scrape_boston_data(year):
     link = f'http://registration.baa.org/20{year}/cf/Public/iframe_ResultsSearch.cfm'
     print(link)
     results = []
@@ -68,9 +68,9 @@ def scrape_data(year):
                'Proj Time', 'Official Time', 'Overall', 'Gender', 'Division']
 
     df = pd.DataFrame(data, columns=columns)
-    df.to_csv(f"raw_data/data{year}.csv", index=False)
+    df.to_csv(f"raw_data/boston/boston{year}.csv", index=False)
     return df
 
 
 if __name__ == "__main__":
-    full_year_data = scrape_data("25")
+    full_year_data = scrape_boston_data("25")
