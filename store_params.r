@@ -10,8 +10,8 @@ library("rstan") # observe startup messages
 
 train_data <- read.csv("processed_data/train_nyc.csv")
 test_data <- read.csv("processed_data/test_nyc.csv")
-# features <- c("total_pace", "curr_pace", "prop") #, "propxcurr", "male", "age", "malexage")
-features <- c("total_pace", "prop") 
+features <- c("total_pace", "curr_pace", "prop") #, "propxcurr", "male", "age", "malexage")
+# features <- c("total_pace", "prop") 
 
 schools_dat <- list(N = nrow(train_data),
                     K = length(features),
@@ -29,8 +29,8 @@ parameters <- as.data.frame(extract(fit)[c("alpha", "beta", "sigma", "lp__")])
 
 # write.csv(predictions,"stan_results/result_bos2.csv", row.names = TRUE)
 # write.csv(parameters,"stan_results/params_bos2.csv", row.names = TRUE)
-write.csv(predictions,"stan_results/result_nyc1.csv", row.names = TRUE)
-write.csv(parameters,"stan_results/params_nyc1.csv", row.names = TRUE)
+write.csv(predictions,"stan_results/result_nyc2.csv", row.names = TRUE)
+write.csv(parameters,"stan_results/params_nyc2.csv", row.names = TRUE)
 
 d2 <- apply(extract(fit)$finish_test, 2, sd)
 
