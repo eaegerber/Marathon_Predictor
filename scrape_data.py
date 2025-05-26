@@ -128,7 +128,7 @@ def loop_attempts(a_dict, n, year=23):
             break
         time.sleep(30)
 
-    d_load = pd.read_csv(f"raw_data/nyc/nyc_names{year}.csv")
+    d_load = pd.read_csv(f"raw_data/nyc/nyc_names{year}_.csv")
     times = pd.DataFrame([v for v in a_dict.values() if v is not None])
     d_load.merge(times, left_on="runnerId", right_on="id").to_csv(f"raw_data/nyc/nyc{year}.csv")
     return a_dict
@@ -236,16 +236,21 @@ def scrape_chi_data(yr=23):
 if __name__ == "__main__":
     # full_year_data = scrape_boston_data("25")
 
-    start = time.time()
-    print("s", start)
-    year = 22
-    id_set = set(pd.read_csv(f"raw_data/nyc/nyc_names{year}.csv")["runnerId"])
-    ids_left = id_set - set(pd.read_csv(f"raw_data/nyc/nyc_times{year}.csv")["id"])
-    init_dict = {id: None for id in ids_left}
-    print(len(ids_left))
-    adding_dict = loop_attempts(init_dict, n=10, year=year)
-    total = time.time() - start
-    print('t', total)
+
+    for year in [23, 19]:
+      try:
+        start = time.time()
+        print("s", start)
+        id_set = set(pd.read_csv(f"raw_data/nyc/nyc_names{year}.csv")["runnerId"])
+        ids_left = id_set - set(pd.read_csv(f"raw_data/nyc/nyc_times{year}.csv")["id"])
+        init_dict = {id: None for id in ids_left}
+        print(len(ids_left))
+        adding_dict = loop_attempts(init_dict, n=10, year=year)
+        total = time.time() - start
+        print('t', total)
+      except Exception as e:
+          print('error', e)
+          continue
 
 
     # chi_conf = [(23, 61), (22, 52), (21, 34), (19, 56)]

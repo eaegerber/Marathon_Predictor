@@ -11,7 +11,7 @@ def _read_data_with_year(path: str, yr: str):
     return data
 
 
-def process_raw_boston_data(
+def process_raw_bos_data(
         yrs: list,
         store: bool = True,
         mins: bool = True,
@@ -40,6 +40,37 @@ def process_raw_boston_data(
     return data
 
 
+def process_raw_nyc_data(
+        yrs: list,
+        store: bool = True,
+        path: str = "processed_data/full_data_bos.csv"
+) -> pd.DataFrame:
+    """Preprocess raw_data into single df"""
+    data_list = [_read_data_with_year(f"raw_data/nyc/nyc{year}.csv", year) for year in yrs]
+    data = pd.concat(data_list)
+
+    data = data.rename({"MAR": "Official Time", "HALF": "Half", "age": "Age", "gender": "M/F"}, axis=1)
+    data["Name"] = data["lastName"] + ", " + data["firstName"]
+    
+    cols = ['5K', '10K', '15K', '20K', 'Half', '25K', '30K', '35K', '40K', 'Official Time']
+    for col in cols:
+        data[col] = data[col].apply(str_to_int_time)
+
+    data = data[['Name', 'Age', 'M/F'] + cols + ['Year']]
+    data = data.dropna()
+
+    for col in cols:
+        data[col] = data[col].astype(int)
+
+    data = data.rename({"Official Time": "Finish Net", "Half": "HALF"}, axis=1)
+
+    if store:
+        data.to_csv(path, index=False)
+    return data
+
+
 if __name__ == "__main__":
     years = ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "22", "23", "24", "25"]
-    process_raw_boston_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")
+    # process_raw_bos_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")
+    years = ["21", "22", "23", "24"]
+    process_raw_nyc_data(yrs=years, store=True, path="processed_data/full_data_nyc.csv")
