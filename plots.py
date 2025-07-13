@@ -1,3 +1,6 @@
+
+# plots.py: functionality to generate miscellaneous plots
+
 import random
 import numpy as np
 import pandas as pd
@@ -7,6 +10,7 @@ from utils import get_data, binning, int_to_str_time#, Union
 random.seed(2024)
 
 def get_plot_dist(races=["bos", "nyc", "chi"], yrs=[2022, 2023]):
+    """Plot distribution of finish times for a list of races in specified years"""
     ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
     train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
 
@@ -26,39 +30,43 @@ def get_plot_dist(races=["bos", "nyc", "chi"], yrs=[2022, 2023]):
     plt.close()
 
 
-def get_data_scatter():
-    train2, _ = get_data(filepath="processed_data/full_data_bos.csv", size_train=6064, train_tup=(0, 2026), size_test=400)
-    table1 = train2[train2["dist"].isin(["10K", "20K", "30K"])]
-    table1[["total_pace", "finish"]] = table1[["total_pace", "finish"]].apply(lambda x: (42195 / 60) / x)
+def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023]):
+    """Get scatter plot comparing extrapolated finish times to actual finish times for a given race"""
+    train_data, _ = get_data(racename=racename, size_train=sample_size, train_lis=yrs)
+    table = train_data[train_data["dist"].isin(["10K", "20K", "30K"])].copy()
+    table[["total_pace", "finish"]] = table[["total_pace", "finish"]].apply(lambda x: (42195 / 60) / x)
+    
+    if racename == "bos":
+        ticks = (90, 150, 210, 270, 330, 390)
+    else:
+        ticks = (90, 150, 210, 270, 330, 390, 450, 510)
 
-    train_ids = np.random.choice(np.array(list(set(table1["id"]))), 1000, replace=False)
-    table2 = table1[table1["id"].isin(train_ids)]
-
-    sns.jointplot(data=table2, x="total_pace", y="finish", hue="dist")
-    plt.plot([100, 450], [100, 450], color="red", label='trad est', alpha=0.4)
+    sns.jointplot(data=table, x="total_pace", y="finish", hue="dist")
+    plt.plot([ticks[0] - 30, ticks[-1] + 30], [ticks[0] - 30, ticks[-1] + 30], color="red", label='trad est', alpha=0.6)
     plt.xlabel("Finish Estimate Extrapolated from Total Pace So Far (HH:MM)")
     plt.ylabel("True Finish Time (HH:MM)")
 
-    ticks = (100, 150, 200, 250, 300, 350, 400, 450)
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
-    plt.xticks(ticks, labels=labels)
-    plt.yticks(ticks, labels=labels)
+    plt.xticks(ticks, labels=labels, rotation=15)
+    plt.yticks(ticks, labels=labels, rotation=15)
 
     for dist, color in [("10K", "blue"), ("20K", "orange"), ("30K", "green")]:
-        small_data = table2[table2["dist"] == dist]#[["total_pace", "finish"]]
+        small_data = table[table["dist"] == dist]
         m, b = np.polyfit(small_data["total_pace"], small_data["finish"], 1)
-        x = np.array([100, 450])
-        plt.plot(x, m*x + b, alpha=0.4, label=f"{dist} fit")
+        x = np.array([ticks[0] - 30, ticks[-1] + 30])
+        plt.plot(x, m*x + b, alpha=0.8, label=f"{dist} fit", linestyle="--")
 
-    plt.ylim(90, 460)
-    plt.xlim(90, 460)
+    plt.xlim(ticks[0] - 30, ticks[-1] + 30)
+    plt.ylim(ticks[0] - 30, ticks[-1] + 30)
     # plt.title("Comparing Extrapolated Estimates to True Finish At Different Stages of Race")
     plt.grid()
-    plt.legend()
-    # plt.savefig("analysis/data_scatter_.png", bbox_inches="tight")
+    plt.legend()#ncols=2
+    plt.savefig(f"analysis/{racename}_data_scatter.png", bbox_inches="tight")
 
 if __name__ == "__main__":
     print('start')
     get_plot_dist()
-    # get_data_scatter()
+    get_extrap_scatter("bos")
+    get_extrap_scatter("nyc")
+    get_extrap_scatter("chi")
     print('fin')

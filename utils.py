@@ -119,21 +119,24 @@ def process_df(data):
     new_df["malexage"] = new_df["male"] * new_df["age"]
     return new_df
 
-def get_data(filepath="full_data_bos.csv", size_train=50, size_test=50, train_tup=(2022, 2023), test_tup=(2023, 2024)):
+def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], save=False):
     """Get and process data from filepath. After processing data, this function samples the training and test data
     based on training and test data specifications for size and years. Returns train and test data"""
-    d = pd.read_csv(filepath)
-    xtrain = process_df(d[d["Year"].isin(range(*train_tup))])
-    xtest = process_df(d[d["Year"].isin(range(*test_tup))])
+    d = pd.read_csv(f"processed_data/full_data_{racename}.csv")
+    train_years, test_years =  d[d["Year"].isin(train_lis)], d[d["Year"].isin(test_lis)]
 
-    train_ids = np.random.choice(np.array(list(set(xtrain["id"]))), size_train, replace=False)
-    xtrain = xtrain[xtrain["id"].isin(train_ids)]
+    if size_train != None:
+        train_years = train_years.sample(n=size_train, random_state=2025, replace=False)
+    
+    if size_test != None:
+        test_years = test_years.sample(n=size_test, random_state=2025, replace=False)
+    
+    xtrain = process_df(train_years)
+    xtest = process_df(test_years)
 
-    test_ids = np.random.choice(np.array(list(set(xtest["id"]))), size_test, replace=False)
-    xtest = xtest[xtest["id"].isin(test_ids)]
-
-    # xtrain = xtrain.groupby('dist', group_keys=False).apply(lambda x: x.sample(size_train))
-    # xtest = xtest.groupby('dist', group_keys=False).apply(lambda x: x.sample(size_test))
+    if save:
+        xtrain.to_csv(f"processed_data/train_{racename}.csv")
+        xtest.to_csv(f"processed_data/test_{racename}.csv")
     return xtrain, xtest
 
 #######
