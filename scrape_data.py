@@ -1,6 +1,7 @@
 
 # scrape_data.py: functionality to scrape old_data from website
 
+import numpy as np
 import pandas as pd
 import itertools
 from bs4 import BeautifulSoup
@@ -207,9 +208,11 @@ def get_links_chi(yr=23, pages=60):
 def scrape_chi_data(yr=23):
     event_param = {23: "MAR_9TGG963812D", 22: "MAR_9TGG9638119", 21: "MAR_9TGG9638F1", 19: "MAR_999999107FA31100000000C9"}
     links_list = pd.read_csv(f"raw_data/chicago/ids{yr}.csv")['0'].values
+    # np.random.shuffle(links_list)
 
     results = []
     for idx, person in enumerate(links_list):
+      try:
         params = {"content" : "detail", "idp" : person, "lang" : "EN", "event" : event_param[yr],}
         response = requests.post("https://chicago-history.r.mikatiming.com/2023", params=params)
         soup = BeautifulSoup(response.text, 'lxml')
@@ -219,17 +222,18 @@ def scrape_chi_data(yr=23):
         rows2 = soup.findAll(name="table", attrs={"class":"table table-condensed"})[1]#.findAll("th")
         info = [row.text.strip() for row in rows2.findAll(["th", "td"])][1::2]
         results.append(info + splits)
-        
-        if idx % 1000 == 0:
-            print(idx)
-            time.sleep(3)
-
         if idx % 100 == 0:
-            time.sleep(2)
+           print(idx)
 
-    mks = [[t.text.strip() for t in row.findAll(["th", "td"])][0] for row in rows[1:]]
-    cols = [row.text.strip() for row in rows2.findAll(["th", "td"])][::2]
-    pd.DataFrame(results, columns = cols + mks).to_csv(f"raw_data/chicago/chi{yr}.csv")
+        if idx % 1000 == 0:
+            mks = [[t.text.strip() for t in row.findAll(["th", "td"])][0] for row in rows[1:]]
+            cols = [row.text.strip() for row in rows2.findAll(["th", "td"])][::2]
+            pd.DataFrame(results, columns = cols + mks).to_csv(f"raw_data/chicago/chi{yr}.csv")
+           
+
+      except Exception as e:
+          print('error', e)
+          continue
 
 ##### > CHI ####
 

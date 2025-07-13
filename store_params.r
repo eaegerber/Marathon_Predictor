@@ -5,14 +5,21 @@
 
 # getwd()
 library("rstan") # observe startup messages
-# train_data <- read.csv("processed_data/train_bos.csv")
-# test_data <- read.csv("processed_data/test_bos.csv")
 
-train_data <- read.csv("processed_data/train_nyc.csv")
-test_data <- read.csv("processed_data/test_nyc.csv")
+train_name <- "processed_data/train_chi.csv"
+# "processed_data/train_bos.csv"
+test_name <- "processed_data/test_chi.csv"
+# "processed_data/test_bos.csv"
+result_name <- "stan_results/result_chi2.csv"
+# "stan_results/result_bos2.csv"
+param_name <- "stan_results/params_chi2.csv"
+# "stan_results/params_bos2.csv"
+
+#features <- c("total_pace", "prop") 
 features <- c("total_pace", "curr_pace", "prop") #, "propxcurr", "male", "age", "malexage")
-# features <- c("total_pace", "prop") 
 
+train_data <- read.csv(train_name)
+test_data <- read.csv(test_name)
 schools_dat <- list(N = nrow(train_data),
                     K = length(features),
                     feats = train_data[features],
@@ -27,10 +34,8 @@ fit <- stan(file = 'marathon.stan', data = schools_dat)
 predictions <- colMeans(extract(fit)$finish_test)
 parameters <- as.data.frame(extract(fit)[c("alpha", "beta", "sigma", "lp__")])
 
-# write.csv(predictions,"stan_results/result_bos2.csv", row.names = TRUE)
-# write.csv(parameters,"stan_results/params_bos2.csv", row.names = TRUE)
-write.csv(predictions,"stan_results/result_nyc2.csv", row.names = TRUE)
-write.csv(parameters,"stan_results/params_nyc2.csv", row.names = TRUE)
+write.csv(predictions, result_name, row.names = TRUE)
+write.csv(parameters,param_name, row.names = TRUE)
 
 d2 <- apply(extract(fit)$finish_test, 2, sd)
 
