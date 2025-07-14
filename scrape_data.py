@@ -206,7 +206,7 @@ def get_links_chi(yr=23, pages=60):
 
 
 def scrape_chi_data(yr=23):
-    event_param = {23: "MAR_9TGG963812D", 22: "MAR_9TGG9638119", 21: "MAR_9TGG9638F1", 19: "MAR_999999107FA31100000000C9"}
+    event_param = {24: "9TGG96382AC981", 23: "MAR_9TGG963812D", 22: "MAR_9TGG9638119", 21: "MAR_9TGG9638F1", 19: "MAR_999999107FA31100000000C9"}
     links_list = pd.read_csv(f"raw_data/chicago/ids{yr}.csv")['0'].values
     # np.random.shuffle(links_list)
 
@@ -215,11 +215,14 @@ def scrape_chi_data(yr=23):
       try:
         params = {"content" : "detail", "idp" : person, "lang" : "EN", "event" : event_param[yr],}
         response = requests.post("https://chicago-history.r.mikatiming.com/2023", params=params)
+        ### for 2024 use response = requests.post("https://results.chicagomarathon.com/2024", params=params)
         soup = BeautifulSoup(response.text, 'lxml')
         table = soup.find("table", attrs={"class":"table table-condensed table-striped"})
         rows = table.findAll("tr")
+
         splits = [[t.text.strip() for t in row.findAll(["th", "td"])][2] for row in rows[1:]]
         rows2 = soup.findAll(name="table", attrs={"class":"table table-condensed"})[1]#.findAll("th")
+        ### for 2024 change [1] to [0]
         info = [row.text.strip() for row in rows2.findAll(["th", "td"])][1::2]
         results.append(info + splits)
         if idx % 100 == 0:
@@ -229,11 +232,15 @@ def scrape_chi_data(yr=23):
             mks = [[t.text.strip() for t in row.findAll(["th", "td"])][0] for row in rows[1:]]
             cols = [row.text.strip() for row in rows2.findAll(["th", "td"])][::2]
             pd.DataFrame(results, columns = cols + mks).to_csv(f"raw_data/chicago/chi{yr}.csv")
-           
 
       except Exception as e:
           print('error', e)
           continue
+
+    mks = [[t.text.strip() for t in row.findAll(["th", "td"])][0] for row in rows[1:]]
+    cols = [row.text.strip() for row in rows2.findAll(["th", "td"])][::2]
+    pd.DataFrame(results, columns = cols + mks).to_csv(f"raw_data/chicago/chi{yr}.csv")
+    return
 
 ##### > CHI ####
 
