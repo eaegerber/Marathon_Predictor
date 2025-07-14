@@ -193,7 +193,7 @@ def other_plots(test_data, m_preds):
     plt.xlim(-20, 20)
     plt.legend()
 
-def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_errors"):
+def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos"):
     """Create table and plot to compare the RMSE for multiple mdoels. Labels specifies the
     models to be shown."""
     colors = [f"C{i}" for i in range(len(labels))]
@@ -208,8 +208,8 @@ def plot_rsme(test_data: pd.DataFrame, labels: list, save_name: str = "all_error
     plt.title("Average Error For Each Model")
     plt.grid(True)
     plt.legend()
-    plt.savefig(f"analysis/{save_name}.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}.png")
+    plt.savefig(f"analysis/{save_name}_rmse.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}_rmse.png")
     plt.close()
     return table_group
 
@@ -227,7 +227,7 @@ def add_intervals_to_test(data_tbl, m_preds, pred_names):
 
 
 def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
-                        linestyles = ["-.", "--.", ":."]):
+                        linestyles = ["-.", "--.", ":."], save_name: str = "bos"):
     """Plot the interval check for each model specified in pred_names"""
     n = len(pred_names)
     colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
@@ -258,14 +258,14 @@ def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     ax.add_artist(leg1)
     leg2 = plt.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="lower right")
     ax.add_artist(leg2)
-    plt.savefig("analysis/interval_check.png", bbox_inches="tight")
-    print("File saved: analysis/interval_check.png")
+    plt.savefig(f"analysis/{save_name}_interval_check.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}_interval_check.png")
     plt.close()
     return big_table
 
 
 def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
-                        linestyles = ["-.", "--.", ":."]):
+                        linestyles = ["-.", "--.", ":."], save_name: str = "bos"):
     """Plot the interval sizes for each model specified in pred_names"""
     n = len(pred_names)
     colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
@@ -295,8 +295,8 @@ def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     leg2 = plt.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="upper right")
     ax.add_artist(leg2)
 
-    plt.savefig("analysis/interval_sizes.png", bbox_inches="tight")
-    print("File saved: analysis/interval_sizes.png")
+    plt.savefig(f"analysis/{save_name}_interval_sizes.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}_interval_sizes.png")
     plt.close()
     return big_table
 
