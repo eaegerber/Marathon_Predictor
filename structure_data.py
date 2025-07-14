@@ -79,7 +79,7 @@ def process_raw_chi_data(
     data = pd.concat(data_list)
     data = data.replace('–', None)
     data = data.rename({"Finish": "Official Time", "HALF": "Half", "age": "Age", "gender": "M/F"}, axis=1)
-
+    data = data.drop(["Gender", "Short"], axis=1) # fix
     data = data.dropna()
     cols = ['5K', '10K', '15K', '20K', 'Half', '25K', '30K', '35K', '40K', 'Official Time']
     for col in cols:
@@ -94,7 +94,7 @@ def process_raw_chi_data(
         data[col] = data[col].astype(int)
 
     data = data.rename({"Official Time": "Finish Net", "Half": "HALF"}, axis=1)
-
+    data = data.sort_values(by=["Year", "Finish Net"])
 
     if store:
         data.to_csv(path, index=False)
@@ -106,5 +106,5 @@ if __name__ == "__main__":
     # process_raw_bos_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")
     years = ["21", "22", "23", "24"]
     # process_raw_nyc_data(yrs=years, store=True, path="processed_data/full_data_nyc.csv")
-    years = ["22", "23"]
+    years = ["22", "23", "24"]
     process_raw_chi_data(yrs=years, store=True, path="processed_data/full_data_chi.csv")
