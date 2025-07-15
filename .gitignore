@@ -163,6 +163,6 @@ cython_debug/
 /raw_data/*/*.csv
 /processed_data/train*.csv
 /processed_data/test*.csv
-/analysis/other/
+/other/
 .Rproj.user
 Marathon_Predictor.Rproj
