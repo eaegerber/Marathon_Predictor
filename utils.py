@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgba
 from matplotlib.lines import Line2D
 
 np.random.seed(2024)
@@ -193,13 +194,17 @@ def other_plots(test_data, m_preds):
     plt.xlim(-20, 20)
     plt.legend()
 
+def rmse_table(test_data, labels: list):
+    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+    table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
+    return table_group
+
 def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos"):
     """Create table and plot to compare the RMSE for multiple mdoels. Labels specifies the
     models to be shown."""
     colors = [f"C{i}" for i in range(len(labels))]
     styles = '.-'
-    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
+    table_group = rmse_table(test_data, labels)
     table_group.plot(label=table_group.columns, style=styles, linewidth=2, grid=True, alpha=0.8, color=colors)
 
     plt.xlabel("Distance Into Race (km)")
@@ -212,6 +217,48 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos"):
     print(f"File saved: analysis/{save_name}_rmse.png")
     plt.close()
     return table_group
+
+def plot_finish_groups(test_data2, label_pair, num=4, overall=True, save_name: str = "bos"):
+    test_data = test_data2.copy()
+    bins = np.percentile(test_data["finish"], [100 * i / num for i in range(num)])
+    # print(num, [100 * i / num for i in range(num)], bins)
+    test_data["group"] = [f"G{g}" for g in np.digitize(test_data["finish"], bins=bins)]
+    # print(test_data["group"].value_counts())
+    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+    group = test_data.groupby(["dist", "group"])[label_pair].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks]
+    # group = test_data.groupby(["dist", "gender"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks]
+
+    fig, ax = plt.subplots()
+    fig.set_figheight(8)
+    fig.set_figwidth(10)
+    colors1 = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][:num]
+    colors2 = [to_rgba(c, alpha=0.3) for c in colors1]
+    mixed_colors = [val for pair in zip(colors2, colors1) for val in pair]
+
+    group2 = group.swaplevel(0, 1, axis=1).sort_index(axis=1)
+    group3 = group2.set_axis([f"{a}_{b}" for a, b in group2.columns], axis=1)
+    group3.plot(style='.-', width=0.8, #alpha=1, 
+        color=mixed_colors,edgecolor="black", linewidth=0.3,
+        ax=ax, legend=False, kind="bar")
+
+    if overall:
+        rmse = rmse_table(test_data, label_pair)
+        plt.plot(range(8), rmse[label_pair[0]], color="black", alpha=0.4, linestyle=':',  marker=".", label='overall_extrap')
+        plt.plot(range(8), rmse[label_pair[1]], color="black", alpha=0.4, linestyle='-',  marker=".", label='overall_model')
+    # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
+    ax.set_facecolor(("orange", 0.05))
+    plt.legend()
+    # ax.legend(ncols=1, loc="upper right")
+    plt.grid(alpha=0.8)
+    plt.xticks(range(8), rotation=0)
+    plt.yticks(range(0, int(group3.max(axis=None) + 5), 5))#, rotation=20)
+    plt.xlabel("Distance Into Race (km)")
+    plt.ylabel("Prediction Error (RMSE), in minutes")
+    plt.title("Average Error By Finish Groups")
+    plt.savefig(f"analysis/{save_name}_rmse_groups.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}_rmse_groups.png")
+    plt.close()
+    return
 
 def add_intervals_to_test(data_tbl, m_preds, pred_names):
     data = data_tbl.copy()
