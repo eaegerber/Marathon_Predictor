@@ -106,5 +106,4 @@ if __name__ == "__main__":
     # process_raw_bos_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")
     years = ["21", "22", "23", "24"]
     # process_raw_nyc_data(yrs=years, store=True, path="processed_data/full_data_nyc.csv")
-    years = ["22", "23", "24"]
     process_raw_chi_data(yrs=years, store=True, path="processed_data/full_data_chi.csv")
