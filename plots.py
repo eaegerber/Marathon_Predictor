@@ -14,14 +14,16 @@ def get_plot_dist(races=["bos", "nyc", "chi"], yrs=[2022, 2023]):
     ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
     train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
 
-    for lbl, train_data in train_list:
+    for i, (lbl, train_data) in enumerate(train_list):
         # minutes_dist = train_data[train_data["Year"].isin(yrs)]["Finish Net"] // 60
         minutes_dist = train_data["Finish Net"] // 60
         bins = binning(minutes_dist)
-        minutes_dist.hist(bins=bins, alpha=0.6, density=True, label=lbl)
+        minutes_dist.hist(bins=bins, alpha=0.2, density=True, color=f"C{i}")
+        d2 = np.bincount(minutes_dist)
+        plt.plot(range(len(d2)), d2 / sum(d2), color=f"C{i}", linewidth=0.8, label=lbl)
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     plt.xticks(ticks, labels=labels)
-    plt.xlim(ticks[1] - 30, ticks[-2] + 30)
+    plt.xlim(ticks[1] - 15, ticks[-2] - 45)
     plt.xlabel(f"Time (HH:MM)")
     plt.ylabel("Frequency")
     plt.title(f"Distribution of Marathon Finish Times")
@@ -47,8 +49,8 @@ def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023]):
     plt.ylabel("True Finish Time (HH:MM)")
 
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
-    plt.xticks(ticks, labels=labels, rotation=15)
-    plt.yticks(ticks, labels=labels, rotation=15)
+    plt.xticks(ticks, labels=labels, rotation=0)
+    plt.yticks(ticks, labels=labels, rotation=0)
 
     for dist, color in [("10K", "blue"), ("20K", "orange"), ("30K", "green")]:
         small_data = table[table["dist"] == dist]
