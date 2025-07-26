@@ -199,26 +199,39 @@ def rmse_table(test_data, labels: list):
     table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
     return table_group
 
-def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos"):
-    """Create table and plot to compare the RMSE for multiple mdoels. Labels specifies the
-    models to be shown."""
-    colors = [f"C{i}" for i in range(len(labels))]
-    styles = '.-'
-    table_group = rmse_table(test_data, labels)
-    table_group.plot(label=table_group.columns, style=styles, linewidth=2, grid=True, alpha=0.8, color=colors)
+def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar=True):
+    """Create table and plot (line or bar) to compare the RMSE for multiple mdoels. Labels
+      specifies the models to be shown."""
+    fig, ax = plt.subplots()
+    fig.set_figheight(8)
+    fig.set_figwidth(10)
 
+    colors = [f"C{i}" for i in range(len(labels))]
+    # sns.set_palette("viridis", n_colors=len(colors), desat=0.8)
+    table_group = rmse_table(test_data, labels).sort_index(axis=1)
+    if bar:
+        table_group.plot(width=0.6, alpha=0.8, edgecolor="black", linewidth=0.3, ax=ax, legend=False, kind="bar") #, color=colors)
+        suff = "_bar"
+    else:
+        table_group.plot(label=table_group.columns, style='.-', linewidth=2, grid=True, alpha=0.8, color=colors, ax=ax)
+        suff = "_line"
+        
+    # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
+    ax.set_facecolor(("orange", 0.05))
     plt.xlabel("Distance Into Race (km)")
     plt.ylabel("Prediction Error (RMSE), in minutes")
     plt.xticks(rotation=60)
     plt.title("Average Error For Each Model")
     plt.grid(True)
     plt.legend()
-    plt.savefig(f"analysis/{save_name}_rmse.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_rmse.png")
+    plt.savefig(f"analysis/{save_name}_rmse{suff}.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}_rmse{suff}.png")
     plt.close()
     return table_group
 
-def plot_finish_groups(test_data2, label_pair, num=4, overall=True, save_name: str = "bos"):
+
+
+def plot_finish_groups(test_data2, label_pair, num=4, overall=True, save_name: str = "bos", palette="viridis"):
     test_data = test_data2.copy()
     bins = np.percentile(test_data["finish"], [100 * i / num for i in range(num)])
     # print(num, [100 * i / num for i in range(num)], bins)
@@ -231,7 +244,9 @@ def plot_finish_groups(test_data2, label_pair, num=4, overall=True, save_name: s
     fig, ax = plt.subplots()
     fig.set_figheight(8)
     fig.set_figwidth(10)
-    colors1 = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][:num]
+    sns.set_palette(palette, n_colors=num, desat=0.8)
+    colors1 = sns.color_palette()
+    # colors1 = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][:num]
     colors2 = [to_rgba(c, alpha=0.3) for c in colors1]
     mixed_colors = [val for pair in zip(colors2, colors1) for val in pair]
 
@@ -257,6 +272,7 @@ def plot_finish_groups(test_data2, label_pair, num=4, overall=True, save_name: s
     plt.title("Average Error By Finish Groups")
     plt.savefig(f"analysis/{save_name}_rmse_groups.png", bbox_inches="tight")
     print(f"File saved: analysis/{save_name}_rmse_groups.png")
+    sns.reset_defaults()
     plt.close()
     return
 
@@ -276,6 +292,10 @@ def add_intervals_to_test(data_tbl, m_preds, pred_names):
 def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
                         linestyles = ["-.", "--.", ":."], save_name: str = "bos"):
     """Plot the interval check for each model specified in pred_names"""
+    fig, ax = plt.subplots()
+    fig.set_figheight(8)
+    fig.set_figwidth(10)
+
     n = len(pred_names)
     colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
@@ -294,6 +314,7 @@ def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     # styles = ["-."] * n + ["--."] * n + [":."] * n
     ax = big_table.plot(label=big_table.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors)
 
+    ax.set_facecolor(("orange", 0.05))
     plt.xlabel("Distance Into Race")
     plt.ylabel("Proportion of Actual Finish Times Within Credible Interval")
     plt.xticks(rotation=60)
@@ -314,6 +335,10 @@ def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = 
 def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
                         linestyles = ["-.", "--.", ":."], save_name: str = "bos"):
     """Plot the interval sizes for each model specified in pred_names"""
+    fig, ax = plt.subplots()
+    fig.set_figheight(8)
+    fig.set_figwidth(10)
+
     n = len(pred_names)
     colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
@@ -331,6 +356,7 @@ def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = 
         styles += [s] * n
     ax = big_table.plot(label=big_table.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors)
 
+    ax.set_facecolor(("orange", 0.05))
     plt.xlabel("Distance Into Race")
     plt.ylabel("Credible Interval Sizes")
     plt.xticks(rotation=60)
