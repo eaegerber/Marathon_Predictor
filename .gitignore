@@ -166,3 +166,4 @@ cython_debug/
 /other/
 .Rproj.user
 Marathon_Predictor.Rproj
+.vscode

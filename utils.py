@@ -142,9 +142,11 @@ def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test
 
 #######
 
-def get_preds(test_data, stan_data, feats_lis, beta_lis, name="stan_pred", propleft=False, full=False):
+def get_preds(test_data, stan_data, feats_lis, name="stan_pred", propleft=False, full=False):
     """Get predictions from test data using stan results. The feat_lis columns in test_data correspond
     with the beta_lis columns in stan_data."""
+    beta_lis = [f"beta.{i+1}" for i in range(len(feats_lis))]
+
     test_new = test_data.copy()
     d1 = test_new[feats_lis].copy()
     d2 = stan_data[beta_lis].T.copy()
