@@ -147,15 +147,14 @@ def get_preds(test_data, stan_data, feats_lis, name="stan_pred", propleft=False,
     with the beta_lis columns in stan_data."""
     beta_lis = [f"beta.{i+1}" for i in range(len(feats_lis))]
 
-    test_new = test_data.copy()
-    d1 = test_new[feats_lis].copy()
-    d2 = stan_data[beta_lis].T.copy()
+    d1 = test_data[feats_lis]
+    d2 = stan_data[beta_lis].T.values
 
-    norm_mean = stan_data["alpha"] + d1.dot(d2.values)
+    norm_mean = stan_data["alpha"] + d1.dot(d2)
 
     if full:
         if propleft: 
-            norm_std = np.outer(test_new["propleft"], stan_data["sigma"])
+            norm_std = np.outer(test_data["propleft"], stan_data["sigma"])
         else:
             norm_std = stan_data["sigma"]
         preds = np.random.normal(norm_mean, norm_std)
@@ -290,90 +289,55 @@ def add_intervals_to_test(data_tbl, m_preds, pred_names):
             data[f"{pred_name}-in{conf}"] = (test_true < b2) & (test_true > b1)
     return data
 
-
-def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
+def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
                         linestyles = ["-.", "--.", ":."], save_name: str = "bos"):
-    """Plot the interval check for each model specified in pred_names"""
-    fig, ax = plt.subplots()
-    fig.set_figheight(8)
-    fig.set_figwidth(10)
+    """Plot the interval check and sizes for each model specified in pred_names"""
+    fig, ax = plt.subplots(nrows=2)
+    fig.set_figheight(18)
+    fig.set_figwidth(12)
 
     n = len(pred_names)
     colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    tables = []
+    tables0, tables1 = [], []
     for conf in intervals:
-        sublabels = [f"{p}-in{conf}" for p in pred_names]
-        result_tbl = itbl.groupby(["dist"])[sublabels].apply(lambda x: x.sum() / len(x)).loc[mks]
-        tables.append(result_tbl)
-
-    plt.figure(figsize=(40, 40))
-    big_table = pd.concat(tables, axis=1)
-    
-    styles = []
-    for s in linestyles:
-        styles += [s] * n
-    # styles = ["-."] * n + ["--."] * n + [":."] * n
-    ax = big_table.plot(label=big_table.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors)
-
-    # ax.set_facecolor(("orange", 0.05))
-    plt.xlabel("Distance Into Race")
-    plt.ylabel("Proportion of Actual Finish Times Within Credible Interval")
-    plt.xticks(rotation=60)
-    plt.ylim(0.2, 1)
-    plt.title("Proportion Within Interval Over Different Distances")
-    plt.grid(True)
-    plt.legend()
-    leg1 = plt.legend([Line2D([0,1],[0,1],linestyle=s, color='black') for s in ["-.", "--", ":"]], ["50", "80", "95"], loc="lower center")
-    ax.add_artist(leg1)
-    leg2 = plt.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="lower right")
-    ax.add_artist(leg2)
-    plt.savefig(f"analysis/{save_name}_interval_check.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_interval_check.png")
-    plt.close()
-    return big_table
-
-
-def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
-                        linestyles = ["-.", "--.", ":."], save_name: str = "bos"):
-    """Plot the interval sizes for each model specified in pred_names"""
-    fig, ax = plt.subplots()
-    fig.set_figheight(8)
-    fig.set_figwidth(10)
-
-    n = len(pred_names)
-    colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
-    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    tables = []
-    for conf in intervals:
+        
         sublabels = [f"{p}-size{conf}" for p in pred_names]
         result_tbl = itbl.groupby(["dist"])[sublabels].apply(lambda x: x.sum() / len(x)).loc[mks]
-        tables.append(result_tbl)
+        tables0.append(result_tbl)
 
-    plt.figure(figsize=(30, 20))
-    big_table = pd.concat(tables, axis=1)
-    
+        sublabels = [f"{p}-in{conf}" for p in pred_names]
+        result_tbl = itbl.groupby(["dist"])[sublabels].apply(lambda x: x.sum() / len(x)).loc[mks]
+        tables1.append(result_tbl)
+
+    big_table0, big_table1 = pd.concat(tables0, axis=1), pd.concat(tables1, axis=1)
+
     styles = []
     for s in linestyles:
         styles += [s] * n
-    ax = big_table.plot(label=big_table.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors)
+    ax0 = big_table0.plot(label=big_table0.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors, ax=ax[0])
+    ax1 = big_table1.plot(label=big_table1.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors, ax=ax[1])
 
-    # ax.set_facecolor(("orange", 0.05))
-    plt.xlabel("Distance Into Race")
-    plt.ylabel("Credible Interval Sizes")
-    plt.xticks(rotation=60)
-    plt.title("Credible Interval Sizes")
-    plt.grid(True)
+    ax0.set(xlabel="Distance Into Race", ylabel="Credible Interval Sizes",
+            title="Credible Interval Sizes") #, facecolor=("orange", 0.05)
+    ax1.set(xlabel="Distance Into Race", ylabel="Proportion of Actual Finish Times Within Credible Interval", 
+            title="Proportion Within Interval Over Different Distances") # , ylim=(0.2, 1)
 
-    leg1 = plt.legend([Line2D([0,1],[0,1],linestyle=s, color='black') for s in ["-.", "--", ":"]], ["50", "80", "95"], loc="upper center")
-    ax.add_artist(leg1)
-    leg2 = plt.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="upper right")
-    ax.add_artist(leg2)
+    leg01 = ax0.legend([Line2D([0,1],[0,1],linestyle=s, color='black') for s in ["-.", "--", ":"]], ["50", "80", "95"], loc="upper center")
+    ax[0].add_artist(leg01)
+    leg02 = ax0.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="upper right")
+    ax[0].add_artist(leg02)
 
-    plt.savefig(f"analysis/{save_name}_interval_sizes.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_interval_sizes.png")
+    leg11 = ax1.legend([Line2D([0,1],[0,1],linestyle=s, color='black') for s in ["-.", "--", ":"]], ["50", "80", "95"], loc="lower center")
+    ax[1].add_artist(leg11)
+    leg12 = ax1.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="lower right")
+    ax[1].add_artist(leg12)
+
+    plt.savefig(f"analysis/{save_name}_intervals.png", bbox_inches="tight")
+    print(f"File saved: analysis/{save_name}_intervals.png")
     plt.close()
-    return big_table
+
+    return big_table0, big_table1
 
 if __name__ == '__main__':
     df = pd.read_csv("processed_data/full_data_bos.csv")
