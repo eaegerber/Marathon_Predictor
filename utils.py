@@ -219,7 +219,7 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar
         suff = "_line"
         
     # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
-    ax.set_facecolor(("orange", 0.05))
+    #ax.set_facecolor(("orange", 0.05))
     plt.xlabel("Distance Into Race (km)")
     plt.ylabel("Prediction Error (RMSE), in minutes")
     plt.xticks(rotation=60)
@@ -263,7 +263,7 @@ def plot_finish_groups(test_data2, label_pair, num=4, overall=True, save_name: s
         plt.plot(range(8), rmse[label_pair[0]], color="black", alpha=0.4, linestyle=':',  marker=".", label='overall_extrap')
         plt.plot(range(8), rmse[label_pair[1]], color="black", alpha=0.4, linestyle='-',  marker=".", label='overall_model')
     # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
-    ax.set_facecolor(("orange", 0.05))
+    # ax.set_facecolor(("orange", 0.05))
     plt.legend()
     # ax.legend(ncols=1, loc="upper right")
     plt.grid(alpha=0.8)
@@ -316,7 +316,7 @@ def plot_interval_check(itbl: pd.DataFrame, pred_names: list, intervals: list = 
     # styles = ["-."] * n + ["--."] * n + [":."] * n
     ax = big_table.plot(label=big_table.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors)
 
-    ax.set_facecolor(("orange", 0.05))
+    # ax.set_facecolor(("orange", 0.05))
     plt.xlabel("Distance Into Race")
     plt.ylabel("Proportion of Actual Finish Times Within Credible Interval")
     plt.xticks(rotation=60)
@@ -358,7 +358,7 @@ def plot_interval_sizes(itbl: pd.DataFrame, pred_names: list, intervals: list = 
         styles += [s] * n
     ax = big_table.plot(label=big_table.columns,  style=styles , linewidth=2, grid=True, alpha=0.75, color=colors)
 
-    ax.set_facecolor(("orange", 0.05))
+    # ax.set_facecolor(("orange", 0.05))
     plt.xlabel("Distance Into Race")
     plt.ylabel("Credible Interval Sizes")
     plt.xticks(rotation=60)
