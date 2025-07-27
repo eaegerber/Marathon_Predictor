@@ -26,7 +26,7 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2022, 2023]):
         d2 = np.bincount(minutes_dist)
         ax.plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=0.8, label=lbl)
     
-    ax.set_facecolor(("orange", 0.05))
+    # ax.set_facecolor(("orange", 0.05))
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     
     plt.xticks(ticks, labels=labels)
