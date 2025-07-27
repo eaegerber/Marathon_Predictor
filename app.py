@@ -16,6 +16,7 @@ ui.page_opts(title="Quantifying Uncertainty in Live Marathon Finish Time Predict
 
 with ui.sidebar(id="sidebar", open="open"):
     ui.input_radio_buttons("radio", "Input Type",  {"0": "Total Time", "1": "Last Split"}, inline=True)  
+    ui.input_radio_buttons("radio2", "Marathon Race",  {"0": "Boston", "1": "New York", "2": "Chicago"}, inline=True)  
     ui.input_select("select", label="Choose a distance", choices=marks, selected="5K")
     ui.input_text("runner_split1", value="", label="Enter time here:", placeholder="MM:SS")
     ui.input_action_button("bttn", "Add Time", class_="btn-success")
@@ -56,6 +57,7 @@ with ui.nav_panel("My Plot"):
         def getInfoInput():
             print(race_splits.get_stored_paces())
             if input.runner_split1():
+                race_splits.city = {"0": "bos", "1": "nyc", "2": "chi"}[input.radio2()]
                 fig, table = get_from_info(race_splits, show=marks)
                 return fig, table
             else:
@@ -98,6 +100,7 @@ with ui.nav_panel("NUCR Plots"):
             i = mapping[name]
 
             race, actual = get_race_for_person(i, nucr)
+            race_splits.city = {"0": "bos", "1": "nyc", "2": "chi"}[input.radio2()]
             fig, table = get_from_info(race, show=input.splits_list0(), actual=actual)
             return fig, table, actual
                                      

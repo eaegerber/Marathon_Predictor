@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_preds
 
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-stan_results = pd.read_csv("stan_results/model2/params_bos.csv")
+stan_dict = {loc: pd.read_csv(f"stan_results/model2/params_{loc}.csv") for loc in ["bos", "nyc", "chi"]}
 
 class RaceSplits():
 
@@ -20,6 +20,7 @@ class RaceSplits():
         self.stored_paces = []
         self.prop = 0
         self.bttn_count = 0
+        self.city = "bos"
 
     def add_pace(self, dist: str, time: str, split=False):
         assert dist in marks
@@ -57,7 +58,7 @@ class RaceSplits():
         info['propxcurr'] = info["prop"] * info["curr_pace"]
         info['propleft'] = 1 - info['prop']
         preds = (42195 / 60) / get_preds(
-            info, stan_results, feats_lis = ["total_pace", "curr_pace", "prop"], propleft=True, full=True
+            info, stan_dict[self.city], feats_lis = ["total_pace", "curr_pace", "prop"], propleft=True, full=True
             )
         return preds
     
