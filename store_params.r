@@ -6,35 +6,42 @@
 # getwd()
 library("rstan") # observe startup messages
 
-num = 2
-# features <- c("total_pace", "prop") 
-features <- c("total_pace", "curr_pace", "prop")
-#, "propxcurr", "male", "age", "malexage")
+features1 <- c("total_pace", "propleft") 
+features2 <- c("total_pace", "curr_pace", "propleft")
+features3 <- c("total_pace", "curr_pace", "prop", "male", "age")
+features4 <- c("total_pace", "curr_pace", "prop", "male", "age", "propxcurr", "malexage")
+features5 <- c("total_pace", "curr_pace", "prop", "male", "age", "propxcurr")
+feat_list = list(features1, features2, features3, features4, features5)
 
-for (race in c("bos", "nyc", "chi")) {
-  print(race)
-  train_name <- paste("processed_data/train_", race, ".csv", sep="")
-  test_name <- paste("processed_data/test_", race, ".csv", sep="")
-  res_name <- paste("stan_results/model", num, "/result_", race, ".csv", sep="")
-  par_name <- paste("stan_results/model", num, "/params_", race, ".csv", sep="")
-
-  train_data <- read.csv(train_name)
-  test_data <- read.csv(test_name)
-  s_dat <- list(N = nrow(train_data),
-                K = length(features),
-                feats = train_data[features],
-                propleft = train_data$propleft,
-                finish = train_data$finish,
-                N_test = nrow(test_data),
-                feats_test = test_data[features],
-                propleft_test = test_data$propleft)
-
-  fit <- stan(file = 'marathon.stan', data = s_dat)
+for (num in 1:5) {
+  for (race in c("bos", "nyc", "chi")) {
+    print(race)
+    print(num)
+    features <- feat_list[[num]]
+    print(features)
+    train_name <- paste("processed_data/train_", race, ".csv", sep="")
+    test_name <- paste("processed_data/test_", race, ".csv", sep="")
+    res_name <- paste("stan_results/model", num, "/result_", race, ".csv", sep="")
+    par_name <- paste("stan_results/model", num, "/params_", race, ".csv", sep="")
   
-  predictions <- colMeans(extract(fit)$finish_test)
-  parameters <- as.data.frame(extract(fit)[c("alpha", "beta", "sigma", "lp__")])
-  write.csv(predictions, res_name, row.names = TRUE)
-  write.csv(parameters,par_name, row.names = TRUE)
+    train_data <- read.csv(train_name)
+    test_data <- read.csv(test_name)
+    s_dat <- list(N = nrow(train_data),
+                  K = length(features),
+                  feats = train_data[features],
+                  prop = train_data$prop,
+                  finish = train_data$finish,
+                  N_test = nrow(test_data),
+                  feats_test = test_data[features],
+                  prop_test = test_data$prop)
+  
+    fit <- stan(file = 'marathon.stan', data = s_dat)
+    
+    predictions <- colMeans(extract(fit)$finish_test)
+    parameters <- as.data.frame(extract(fit)[c("alpha", "beta", "sigma", "lp__")])
+    write.csv(predictions, res_name, row.names = TRUE)
+    write.csv(parameters,par_name, row.names = TRUE)
+  }
 }
 
 # d2 <- apply(extract(fit)$finish_test, 2, sd)
