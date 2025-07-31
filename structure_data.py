@@ -14,7 +14,7 @@ def _read_data_with_year(path: str, yr: str):
 def process_raw_bos_data(
         yrs: list,
         store: bool = True,
-        mins: bool = True,
+        mins: bool = False,
         path: str = "processed_data/full_data_bos.csv"
 ) -> pd.DataFrame:
     """Preprocess raw_data into single df"""
@@ -102,8 +102,9 @@ def process_raw_chi_data(
 
 
 if __name__ == "__main__":
-    years = ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "22", "23", "24", "25"]
+    # years = ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "22", "23", "24", "25"]
     # process_raw_bos_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")
     years = ["21", "22", "23", "24"]
+    process_raw_bos_data(yrs=years, store=True, path="processed_data/full_data_bos.csv")
     # process_raw_nyc_data(yrs=years, store=True, path="processed_data/full_data_nyc.csv")
-    process_raw_chi_data(yrs=years, store=True, path="processed_data/full_data_chi.csv")
+    # process_raw_chi_data(yrs=years, store=True, path="processed_data/full_data_chi.csv")
