@@ -118,19 +118,21 @@ def process_df(data):
     new_df["male"] = (new_df['gender'] == "M").astype(int)
     new_df["propxcurr"] = new_df["prop"] * new_df["curr_pace"]
     new_df["malexage"] = new_df["male"] * new_df["age"]
+    new_df["alpha"] = 1
+    new_df['lvl'] = (new_df['dist'].str[:-1].astype(int) / 5).astype(int)
     return new_df
 
-def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], save=False):
+def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], save=False, seed=2025):
     """Get and process data from filepath. After processing data, this function samples the training and test data
     based on training and test data specifications for size and years. Returns train and test data"""
     d = pd.read_csv(f"processed_data/full_data_{racename}.csv")
     train_years, test_years =  d[d["Year"].isin(train_lis)], d[d["Year"].isin(test_lis)]
 
     if size_train != None:
-        train_years = train_years.sample(n=size_train, random_state=2025, replace=False)
+        train_years = train_years.sample(n=size_train, random_state=seed, replace=False)
     
     if size_test != None:
-        test_years = test_years.sample(n=size_test, random_state=2025, replace=False)
+        test_years = test_years.sample(n=size_test, random_state=seed, replace=False)
     
     xtrain = process_df(train_years)
     xtest = process_df(test_years)
@@ -163,6 +165,28 @@ def get_preds(test_data, stan_data, feats_lis, name="stan_pred", propleft=False,
         preds = norm_mean.mean(axis=1) #preds.mean(axis=1)
         return preds
     
+
+def _get_lvl_params(stan_data, lvl, num_feats):
+    betas = stan_data[[f"beta.{lvl}.{num+1}" for num in range(num_feats)]].T.values
+    sigma = stan_data[f"sigma.{lvl}"].values
+    return betas, sigma
+
+def _preds(x, feats, params, full=True):
+    betas, sigma = _get_lvl_params(params, x["lvl"].iloc[0], len(feats))
+    xfeats = x[feats].values
+    pred_means = xfeats.dot(betas)
+    if full:
+        preds = np.random.normal(pred_means, sigma)
+        return preds
+    else:
+        preds = pred_means.mean(axis=1)
+        return preds
+    
+def get_predictions(test_data, stan_path, feats_lis, full=False):
+    stan_data = pd.read_csv(stan_path)
+    result = test_data.groupby("lvl", group_keys=False)[feats_lis + ["lvl"]].apply(lambda x: _preds(x, feats_lis, stan_data, full))
+    return np.concatenate(list(result))
+
 def other_stats(data, finish):
     """Return overall RMSE and R-squared values for specified columns in data"""
     ftime = (42195/60) / finish
@@ -225,9 +249,14 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar
     plt.title("Average Error For Each Model")
     plt.grid(True)
     plt.legend()
-    plt.savefig(f"analysis/{save_name}_rmse{suff}.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_rmse{suff}.png")
+    if save_name != "":
+        plt.savefig(f"analysis/{save_name}_rmse{suff}.png", bbox_inches="tight")
+        print(f"File saved: analysis/{save_name}_rmse{suff}.png")
     plt.close()
+
+    for lbl in labels:
+        if lbl != "extrap":
+            table_group[f"pcnt_{lbl}"] = 1 - (table_group[lbl] / table_group["extrap"])
     return table_group
 
 
