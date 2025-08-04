@@ -8,10 +8,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 from matplotlib.lines import Line2D
-from utils import get_data, binning, int_to_str_time, rmse_table #, Union
+from utils import get_data, binning, int_to_str_time, rmse_table, group_data #, Union
 random.seed(2024)
 
-def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2022, 2023]):
+def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     """Plot distribution of finish times for a list of races in specified years"""
     ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
     train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
@@ -116,16 +116,9 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar
     return table_group
 
 
-def plot_finish_groups(test_data2, label_pair, num=4, overall=True, 
-                       save_name: str = "bos", palette="viridis", grouping="finish"): # grouping="age"
-    test_data = test_data2.copy()
-    bins = np.percentile(test_data[grouping], [100 * i / num for i in range(num)])
-    # print(num, [100 * i / num for i in range(num)], bins)
-    test_data["group"] = [f"Q{g}" for g in np.digitize(test_data[grouping], bins=bins)]
-    # print(test_data["group"].value_counts())
-    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    group = test_data.groupby(["dist", "group"])[label_pair].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks]
-
+def plot_finish_groups(test_data, label_pair, num=4, overall=True, save_name: str = "bos", 
+                       palette="viridis", grouping="finish"): # grouping="age"
+    """Create RMSE plot grouped by finish time"""
     fig, ax = plt.subplots()
     fig.set_figheight(8)
     fig.set_figwidth(10)
@@ -135,10 +128,9 @@ def plot_finish_groups(test_data2, label_pair, num=4, overall=True,
     colors2 = [to_rgba(c, alpha=0.3) for c in colors1]
     mixed_colors = [val for pair in zip(colors2, colors1) for val in pair]
 
-    group2 = group.swaplevel(0, 1, axis=1).sort_index(axis=1)
-    group3 = group2.set_axis([f"{a}_{b}" for a, b in group2.columns], axis=1)
-    group3.plot(style='.-', width=0.8, #alpha=1, 
-        color=mixed_colors,edgecolor="black", linewidth=0.3,
+    table_group = group_data(test_data, group_feat=grouping, num_groups=num, pref="Q", group_name="group", lbl="model2")
+    table_group.plot(style='.-', width=0.8, #alpha=1, 
+        color=mixed_colors, edgecolor="black", linewidth=0.3,
         ax=ax, legend=False, kind="bar")
 
     if overall:
@@ -151,7 +143,7 @@ def plot_finish_groups(test_data2, label_pair, num=4, overall=True,
     # ax.legend(ncols=1, loc="upper right")
     plt.grid(alpha=0.8)
     plt.xticks(range(8), rotation=0)
-    plt.yticks(range(0, int(group3.max(axis=None) + 5), 5))#, rotation=20)
+    plt.yticks(range(0, int(table_group.max(axis=None) + 5), 5))
     plt.xlabel("Distance Into Race (km)")
     plt.ylabel("Prediction Error (RMSE), in minutes")
     plt.title("Average Error By Finish Groups")
@@ -159,34 +151,26 @@ def plot_finish_groups(test_data2, label_pair, num=4, overall=True,
     print(f"File saved: analysis/{save_name}_rmse_groups.png")
     sns.reset_defaults()
     plt.close()
-    return
+    return table_group
 
 
-def plot_finish_age_gender(test_data2, label_pair, num=4, overall=True, 
+def plot_finish_age_gender(test_data, label_pair, num=4, overall=True, 
                            save_name: str = "bos", palette="viridis", grouping="age"):
+    """Create RMSE plot grouped by age group, for each gender"""
     fig, ax = plt.subplots(ncols=2, sharey=True)
     fig.set_figheight(12)
     fig.set_figwidth(24)
-
-    test_data = test_data2.copy()
-    bins = np.percentile(test_data[grouping], [100 * i / num for i in range(num)])
-    print(num, [100 * i / num for i in range(num)], bins)
-    test_data["group"] = [f"AG{g}" for g in np.digitize(test_data[grouping], bins=bins)]
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
 
+    sns.set_palette(palette, n_colors=num, desat=0.8)
+    colors1 = sns.color_palette()
+    colors2 = [to_rgba(c, alpha=0.3) for c in colors1]
+    mixed_colors = [val for pair in zip(colors2, colors1) for val in pair]
+
     for i, g in enumerate(["F", "M"]):
-        # test_data2 = test_data[test_data["gender"] == g]
         test_data2 = test_data[test_data["male"] == i]
-        group = test_data2.groupby(["dist", "group"])[label_pair].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks]
-
-        sns.set_palette(palette, n_colors=num, desat=0.8)
-        colors1 = sns.color_palette()
-        colors2 = [to_rgba(c, alpha=0.3) for c in colors1]
-        mixed_colors = [val for pair in zip(colors2, colors1) for val in pair]
-
-        group2 = group.swaplevel(0, 1, axis=1).sort_index(axis=1)
-        group3 = group2.set_axis([f"{a}_{b}" for a, b in group2.columns], axis=1)
-        group3.plot(style='.-', width=0.8, #alpha=1, 
+        table_group = group_data(test_data2, group_feat=grouping, num_groups=num, pref="AG", group_name="group", lbl="model2")
+        table_group.plot(style='.-', width=0.8, #alpha=1, 
             color=mixed_colors,edgecolor="black", linewidth=0.3,
             ax=ax[i], legend=False, kind="bar")
 

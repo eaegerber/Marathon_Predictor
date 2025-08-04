@@ -12,7 +12,7 @@ features3 <- c("alpha", "total_pace", "curr_pace", "male", "age")
 features4 <- c("alpha", "total_pace", "curr_pace", "male", "age", "malexage")
 feat_list = list(features1, features2, features3, features4)
 
-for (num in 1:1) {
+for (num in 1:3) {
   for (race in c("bos", "nyc", "chi")) {
     print(race)
     print(num)
@@ -30,10 +30,7 @@ for (num in 1:1) {
                   L = 8,
                   feats = train_data[features],
                   ll = train_data$lvl,
-                  finish = train_data$finish)#,
-                  # N_test = nrow(test_data),
-                  # feats_test = test_data[features],
-                  # ll_test = test_data$lvl)
+                  finish = train_data$finish)
   
     fit <- stan(file = 'marathon.stan', data = s_dat, cores=4)
     # predictions <- colMeans(extract(fit)$finish_test)

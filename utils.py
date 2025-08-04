@@ -192,6 +192,15 @@ def rmse_table(test_data, labels: list):
     table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
     return table_group
 
+def group_data(test_data, group_feat, num_groups=4, pref="G", group_name="group", lbl="model2"):
+    data = test_data.copy()
+    mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
+    bins = np.percentile(data[group_feat], [100 * i / num_groups for i in range(num_groups)])
+    data[group_name] = [f"{pref}{g}" for g in np.digitize(data[group_feat], bins=bins)]
+    group = data.groupby(["dist", group_name])[["extrap", lbl]].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks].swaplevel(0, 1, axis=1)
+    group2 = group.set_axis([f"{a}_{b}" for a, b in group.columns], axis=1).sort_index(axis=1)
+    return group2
+
 def add_intervals_to_test(data_tbl, m_preds, pred_names):
     data = data_tbl.copy()
     for pred_name in pred_names:
