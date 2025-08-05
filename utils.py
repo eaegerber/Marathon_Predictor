@@ -171,8 +171,8 @@ def other_stats(data, finish, rnd=3, save_name: str = "bos"):
         if lbl != "extrap":
             tbl[f"pcnt_{lbl}"] = "-"#1 - (tbl[lbl] / tbl["extrap"])
 
-    tbl.round(rnd).to_csv(f"analysis/{save_name}_rmse2.csv")
-    print(f"File saved: analysis/{save_name}_rmse2.csv")
+    tbl.round(rnd).to_csv(f"analysis/tables/{save_name}_rmse2.csv")
+    print(f"File saved: analysis/tables/{save_name}_rmse2.csv")
     return tbl
 
 def get_table(test_data, model_preds):

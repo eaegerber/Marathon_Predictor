@@ -9,7 +9,6 @@
 \usepackage{microtype}
 \usepackage[numbers,square,sort&compress]{natbib}
 
-
 % New theorem-like environments will be introduced by using the commands \theoremstyle and \newtheorem.
 % Please note that the environments proof and definition are already defined within dgryuter.sty.
 \theoremstyle{dgthm}
@@ -30,8 +29,6 @@
 \usepackage{csvsimple}
 
 \begin{document}
-
-
 	
 %%%--------------------------------------------%%%
 	\articletype{Research Article}
@@ -85,7 +82,7 @@ We identified hierarchical Bayesian linear regression as an approach to address 
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=4.2in]{../analysis/plot_dist.png}
+    \includegraphics[width=4.2in]{../analysis/plots/plot_dist.png}
     \caption{Distribution of finish times for all finishers for each of the 3 marathons from 2021-2024}
     \label{fig:plotdist}
 \end{figure*}
@@ -100,13 +97,13 @@ Bayesian linear regression found many applications in many fields including \_. 
 \section{Data} 
 We focused our analysis on the three World Marathon Majors in the United States: the Boston Marathon, the New York City Marathon, and the Chicago Marathon. Each event hosts tens of thousands of runners every April, November, and October, respectively \cite{dredge:2025}. For the Boston Marathon, most runners qualify to compete by hitting notoriously difficult standards, while the remaining part of the 30,000-person field is made up of charity runner spots, which have no qualification standards. The New York City and Chicago Marathons, each with over 50,000 yearly runners, have lottery systems to select runners in addition to charity spots and time qualifiers. We scraped data for each marathon from the respective websites of each organization: Boston data was found on the Boston Athletic Association (BAA) website \cite{resultbos:2024}, New York City data on the New York Road Runners website \cite{resultnyc:2024}, and Chicago data on the Chicago Marathon website \cite{resultchi:2024}. 
 
-Our 3 datasets (Boston, New York, Chicago) each contain the name, age, gender, and in-race splits (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K, and FINISH, all in seconds) for every finishing runner of the respective marathon from each race held since the COVID-19 pandemic (2021-2024). We decided to exclude runners that did not finish the race or do not have some or all intermediate splits recorded, as we only wanted to focus on runners that have all the information we want to use for prediction. We partitioned this data into 3 training sets (one for each marathon) of runners from years 2021-2023, and 3 corresponding test sets of runners from the year 2024. Values for the number of runners for each marathon in each year are shown in the Table \ref{tab:counts}, and the distribution of finish times for each marathon is shown in Fig. \ref{fig:plotdist}.
+Our 3 datasets (Boston, New York, Chicago) each contain the name, age, gender, and in-race splits (5K, 10K, 15K, 20K, HALF, 25K, 30K, 35K, 40K, and FINISH, all in seconds) for each finishing runner of the respective marathon from each race held since the COVID-19 pandemic (2021-2024). We decided to exclude runners who did not finish the race or do not have some or all intermediate splits recorded, as we only wanted to focus on runners that have all the information we want to use for prediction. We partitioned this data into 3 training sets (one for each marathon) of runners from years 2021-2023, and 3 corresponding test sets of runners from the year 2024. The values of the number of runners for each marathon in each year are shown in Table \ref{tab:counts}, and the distribution of the finish times for each marathon is shown in Fig. \ref{fig:plotdist}.
 
 \begin{table}[!ht]
 \centering
 \begin{tabular}{c|ccc}
 Year & Boston & New York & Chicago \\ \midrule
-\csvreader[late after line = \\,]{../analysis/race_info.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/race_info.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcoliv}   \midrule 
 Total & 90900 & 175780 & 167700 \\
  \end{tabular}
@@ -116,7 +113,7 @@ Total & 90900 & 175780 & 167700 \\
  
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=4.2in]{../analysis/bos_data_scatter.png}
+    \includegraphics[width=4.2in]{../analysis/plots/bos_data_scatter.png}
     \caption{For three stages of the race (10K, 20K and  30K, in purple, blue, and cyan, respectively), the finish estimates extrapolated from the total pace so far (x-axis) are compared to the actual finish times (y-axis). The red line depicts the traditional estimate, while the other lines are the best fit lines for each of the three stages of the race.}
     \label{fig:scatter}
 \end{figure*}
@@ -164,44 +161,29 @@ where $s \in \{1, 2, ..., 8\}$ is the stage of the race (1 = 5K, 2 = 10K, ..., 8
 
 We can evaluate the performance of a Bayesian linear regression model by training on the training set (2021-2023) and predicting for runners in the test set (2024). We can compute the root mean squared error (RMSE) from the model for each runner and compare this to the RMSE of the extrapolation method on the same test set.
 
-Increasing the number of features used to predict finish times should lower the RMSE and improve the accuracy of the predictions, as the model has more information to work with. We considered making predictions by directly incorporating all of the previous splits in the race to predict a future one, as this would contain the most prior information. However, we determined that this method has strong issues with collinearity, as a runner’s previous splits are strongly correlated with each other. Further, adding more features to the Bayesian model leads to significantly longer model runtimes, which makes the marginal gains in prediction accuracy negligible.  Especially with hierarchical regression, the number of parameter estimates grows rapidly with each additional feature. Thus, we opted to analyze in depth just the methods above and compare their performances to the baseline. 
+Increasing the number of features used to predict the finish times should reduce the RMSE and improve the accuracy of the predictions, as the model has more information to work with. We considered making predictions by directly incorporating all of the previous splits in the race to predict a future one, as this would contain the most prior information. However, we determined that this method has strong collinearity issues, as the previous splits of the runners are strongly correlated with each other. Furthermore, adding more features to the Bayesian model leads to significantly longer model runtimes, which makes the marginal gains in prediction accuracy negligible.  Especially with hierarchical regression, the number of parameter estimates grows rapidly with each additional feature. Thus, we opted to analyze in depth only the methods above and compare their performances to the baseline. 
 
-For each marathon dataset, we subsampled our training set to randomly select 250 runners from 2021-2023 (giving us $250*8=2000$ individual samples), to speed up model training runtime while still having a reasonably sized dataset to make inference with. We also sampled 4000 runners (or 32000 samples) for each test set.%The label extrap below represents the baseline extrapolation prediction.
+For each marathon dataset, we subsampled our training set to randomly select 250 runners from 2021-2023 (giving us $250*8=2000$ individual samples), to speed up model training runtime while still having a reasonably sized data set to make inferences. We also sampled 4,000 runners (or 32,000 samples) for each test set.%The label extrap below represents the baseline extrapolation prediction.
 
 \begin{table*}[!ht]
 \centering
 \begin{tabular}{c|c|cc|cc|cc}
  & extrap & \multicolumn{2}{c}{model1} & \multicolumn{2}{c}{model2} & \multicolumn{2}{c}{model3}  \\ \midrule 
 Distance & RMSE & RMSE & \% Improve & RMSE & \% Improve & RMSE & \% Improve\\ \midrule
-\csvreader[late after line = \\,]{../analysis/bos_rmse.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/bos_rmse.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcolvi & \csvcoliv & \csvcolvii & \csvcolv & \csvcolviii}   \midrule
 %& \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii & \csvcolviii %& \csvcolix & \csvcolx
-\csvreader[late after line = \\,]{../analysis/bos_rmse2.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/bos_rmse2.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcolvi & \csvcoliv & \csvcolvii & \csvcolv & \csvcolviii}   
 \end{tabular}
  \caption{RMSE at different stages of the race for the traditional method and both Bayesian linear regression models}
  \label{tab:rmse}
  \end{table*}
- 
- \mycomment{
- \begin{table*}[!ht]
-\centering
-\begin{tabular}{c|c|ccc|ccc}
-&  \multicolumn{4}{c}{RMSE}  &  \multicolumn{3}{c}{\% Improve from extrap}  \\ \midrule
-Distance & extrap & model1 & model2 & model3 & model1 & model2 & model3   \\ \midrule 
-\csvreader[late after line = \\,]{../analysis/bos_rmse.csv}{}%
-{\csvcoli & \csvcolii  & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii & \csvcolviii}   \midrule 
-\csvreader[late after line = \\,]{../analysis/bos_rmse2.csv}{}%
-{\csvcoli & \csvcolii  & \csvcoliii & \csvcolvi & \csvcoliv & \csvcolvii & \csvcolv & \csvcolviii}   
-\end{tabular}
- \caption{RMSE at different stages of the race for the traditional method and both Bayesian linear regression models}
- \label{tab:rmse}
- \end{table*}
- }
+
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=4.2in]{../analysis/bos_rmse_groups.png}
+    \includegraphics[width=4.2in]{../analysis/plots/bos_rmse_groups.png}
     \caption{RMSE at different stages of the race for the traditional method (lighter shades) and model2 (darker shades), broken down for different finishing groups, differentiated by color. The dotted and solid lines are the overall RMSE for traditional method and model2, respectively.}
      \label{fig:groups}
 \end{figure*}
@@ -210,12 +192,12 @@ Distance & extrap & model1 & model2 & model3 & model1 & model2 & model3   \\ \mi
 \label{results}
 
 
-The results, data, plots, and numbers mentioned in the following section are specifically from analysis using the Boston data, for simplicity. Equivalent analysis was completed from Chicago and New York as well, and discussion of the comparisons between these three marathons can be found in Section \ref{marathoncomparesection}. The decision to focus on model2 in Sections \ref{groupederrorsection} and \ref{credibleintervalsection} is explained in Section \ref{modelselectionsection}.
+The results, data, plots, and numbers mentioned in the following section are specifically from analysis using the Boston data set, for simplicity. Equivalent analyses were also completed from Chicago and New York, and discussion of the comparisons between these three marathons can be found in Section \ref{marathoncomparesection}. The decision to focus on model2 in Sections \ref{groupederrorsection} and \ref{credibleintervalsection} is explained in Section \ref{modelselectionsection}.
 
 \subsection{Prediction Errors}
 \label{predictionerrorsection}
 
-As shown in the Table \ref{tab:rmse}, all three of our models have similar test RMSE at most levels of the race. The models improve upon the traditional extrapolation method at all levels, and significantly outperform it in the beginning and middle stages of races, as shown by the improvement percentages. It is especially important to have better finish estimates earlier in the race, as there is the greatest amount of uncertainty at these stages. The gap in RMSE values decreases between the traditional model and our models in the latter stages of races (there is a less than one minute gap between our models and the traditional model at 40K compared to a 6-7 minute gap at 25K). This makes sense because the traditional model also benefits from decreased uncertainty at the latter stages of the race. This demonstrates that the overall pace alone is a strong estimator of the true overall finish pace when the race is almost done. % which makes sense 
+As shown in Table \ref{tab:rmse}, all three of our models have similar test RMSE at most levels of the race. The models improve upon the traditional extrapolation method at all levels, and significantly outperform it in the beginning and middle stages of races, as shown by the improvement percentages. It is especially important to have better finish estimates earlier in the race, as there is the greatest amount of uncertainty at these stages. The gap in RMSE values decreases between the traditional model and our models in the latter stages of races (there is a less than one minute gap between our models and the traditional model at 40K compared to a 6-7 minute gap at 25K). This makes sense because the traditional model also benefits from decreased uncertainty at the latter stages of the race. This demonstrates that the overall pace alone is a strong estimator of the true overall finish pace when the race is almost done. % which makes sense 
 
 Across all stages, model2 has slightly better performance than model1, although the gap is small compared to the gap between those models and the traditional one. Intuitively, this makes sense because having curr\_pace as an additional predictor gives enough information to get a slightly better estimate. Notably, model2 appears to have consistently better percentage improvement in the latter stages, while the model1 percentage improvement dips. Thus, there is a greater effect in having curr\_pace as the extra feature at those stages. The model3 RMSE is very similar to the model2 one, and we want to further analyze the effects of the extra features in model3 (age, gender) in Section \ref{modelselectionsection}.
 
@@ -226,30 +208,18 @@ Focusing on 15K, for example, we see that the model predictions, on average, are
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=6.2in]{../analysis/bos_rmse_gender_age.png}
+    \includegraphics[width=6.2in]{../analysis/plots/bos_rmse_gender_age.png}
     \caption{RMSE at different stages of the race for the traditional method (lighter shades) and model2 (darker shades), broken down for different finishing groups, differentiated by color. The dotted and solid lines are the overall RMSE for traditional method and model2, respectively. The left plot is for female runners, while the right plot is for male runners.}
      \label{fig:breakdown}
 \end{figure*}
 
 We can examine this data further by looking at the breakdown of different groups within this test set. In Fig. \ref{fig:groups} the data is broken down into 4 equally partitioned finish groups (G4 being the fastest quarter of finishers, while G1 being the slowest quarter of finishers). We then show the RMSE values as bars for each group for both extrap and model2. This breakdown highlights how the prediction errors vary depending on how quickly you run. Generally, the slower runners have higher prediction errors, which makes sense because there is more variability in possible finishes with slower paces. 
 
-\mycomment{Interestingly, the model underperforms compared to the baseline method for the faster runners in the beginning stages of the race. G4 runners (the fastest quarter of runners) actually see the model underperforming until 20K, when the model starts outperforming the baseline for the rest of the race. G3 runners experience this until a switch at 15K, and even G2 runners experience this at 5K before a switch at 10K. G1 runners as a group consistently benefit from a model better than the baseline, which is very important given that these runners have the most uncertainty with their times. }
-
+%Interestingly, the model underperforms compared to the baseline method for the faster runners in the beginning stages of the race. G4 runners (the fastest quarter of runners) actually see the model underperforming until 20K, when the model starts outperforming the baseline for the rest of the race. G3 runners experience this until a switch at 15K, and even G2 runners experience this at 5K before a switch at 10K. G1 runners as a group consistently benefit from a model better than the baseline, which is very important given that these runners have the most uncertainty with their times.
 
 It is important to note that this grouping arbitrarily examines the runners in quartiles, and a more fine-grained analysis, perhaps with more groups or better-defined groups, might reveal more about the model performance on specific cohorts of runners.
 
 Another way to break down the data is categorizing runners by their age and gender, which is done in Fig. \ref{fig:breakdown}. Here, we grouped runners by both their gender and their "age groups" \footnote{Age group used in this context is distinct from how age groups are used in these marathons, which generally are in 5 year increments.}. Similar to how grouping worked above, AG4 refers to the oldest quarter of runners for a given gender, while AG1 refers to the youngest quarter of runners. This breakdown allows us to see prediction differences between age and gender. Overall, men have lower prediction errors than women. However, just as before, more can be learned with better-defined age groupings. %.....
-
-
-\mycomment{
-\begin{figure*}[ht]
-    \centering
-    \includegraphics[width=4.2in]{../analysis/bos_interval_size.png}
-    \caption{Average credible interval sizes at each stage of the race for models bayes1 (left, orange), bayes2 (left, green), quant1 (right, red) and quant2 (right, purple). Proportion of true finish times falling within credible intervals at each stage of the race for models bayes1 (left, orange), bayes2 (left, green), quant1 (right, red) and quant2 (right, purple)}
-     \label{fig:size}
-\end{figure*}
-}
-
 
 \subsection{Credible Intervals}
 \label{credibleintervalsection}
@@ -259,7 +229,7 @@ Another way to break down the data is categorizing runners by their age and gend
 \begin{tabular}{c|ccc|ccc|ccc}
  &  \multicolumn{3}{c}{50\%} & \multicolumn{3}{c}{80\%} & \multicolumn{3}{c}{95\%}  \\ \midrule 
 Distance & model1 & model2 & model3 & model1 & model2 & model3 & model1 & model2 & model3 \\ \midrule
-\csvreader[late after line = \\,]{../analysis/bos_int_size.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/bos_int_sizes.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii & \csvcolviii & \csvcolix & \csvcolx}   \midrule     
 \end{tabular}
  \caption{Average credible interval sizes at each stage of the race for model1 and model2}
@@ -276,7 +246,7 @@ We also want to see if, for a given X\% interval, approximately X\% of runners t
 \begin{tabular}{c|ccc|ccc|ccc}
  &  \multicolumn{3}{c}{50\%} & \multicolumn{3}{c}{80\%} & \multicolumn{3}{c}{95\%}  \\ \midrule 
 Distance & model1 & model2 & model3 & model1 & model2 & model3 & model1 & model2 & model3 \\ \midrule
-\csvreader[late after line = \\,]{../analysis/bos_int_checks.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/bos_int_check.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii & \csvcolviii & \csvcolix & \csvcolx}   \midrule
 \end{tabular}
  \caption{Proportion of true finish times falling within credible intervals at each stage of the race for model1 and model2}
@@ -286,7 +256,7 @@ Distance & model1 & model2 & model3 & model1 & model2 & model3 & model1 & model2
 \subsection{Model Selection}
 \label{modelselectionsection}
 
-In selecting a model, we want to find a balance between choosing a model that has good performance and choosing one that is simple and has fewer parameters. Because all three of the models have similar RMSE values, we want to test if the slight differences between them are significant enough to warrant using a more complicated model over a simpler one. We tested this using the Kolmogorov–Smirnov test, a nonparametric test determining if two samples come from the same distribution (H0: same distribution, H1: different distributions, p=0.05). Results of each comparison test are shown in the table below.
+In selecting a model, we want to find a balance between choosing a model that has good performance and choosing one that is simple and has fewer parameters. Because all three models have similar RMSE values, we want to test if the slight differences between them are significant enough to warrant using a more complicated model over a simpler one. We tested this using the Kolmogorov–Smirnov test, a nonparametric test that determines if two samples come from the same distribution (H0: same distribution, H1: different distributions, p=0.05). Results of each comparison test are shown in the table below.
 
 \begin{table}[!ht]
 \centering
@@ -317,7 +287,7 @@ The Boston Marathon has lower prediction errors than the Chicago and New York Ma
 \begin{tabular}{c|ccc}
  &  \multicolumn{3}{c}{RMSE model2} \\ \midrule 
 Distance & Boston & New York & Chicago \\ \midrule
-\csvreader[late after line = \\,]{../analysis/marathons.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/marathons.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcoliv i}   \midrule
 \end{tabular}
  \caption{Proportion of true finish times falling within credible intervals at each stage of the race for model1 and model2}
@@ -362,144 +332,9 @@ Finally, the prediction task can even be adapted towards different goals. For ex
 All of the code used to create the analyses and develop the application can be found here: \url{https://github.com/bonyejekwe/Marathon_Predictor}
 
 %.   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\mycomment{
-
-\subsection{General information} 
-Manuscripts should be written in clear and concise English. Please have your text proofread by an English native speaker before you submit it for consideration. At the proof stage, only minor changes and corrections are allowed.
-
-The \textbf{Introduction} to the manuscript should contain a clear definition of the problem being considered. Wherever possible theoretical results should be cited. The use of SI units is required.
-
-\section{Layout of manuscripts} 
-\subsection{Equations and theorem-like environments}	
-\textbf{Equations} should be well-aligned and should not be crowded \eqref{eq:1}. Only Latin and Greek alphabets are to be used. Complicated superscripts and subscripts should be avoided by introducing new symbols. Avoid repetition of a complicated expression by representing it with a symbol.
-
-% unnumbered equation if not cited in the text
-\begin{equation*}
-k_{n+1} = n^2 + k_n^2 - k_{n-1}
-\end{equation*}
-
-% numbered equation if cited in the text
-\begin{equation}
-f(x)=(x+a)(x+b)
-\label{eq:1}
-\end{equation}
-
-New theorem-like environments will be introduced by using the commands \verb|\theoremstyle| and \verb|\newtheorem|.
-Please note that the environments proof and definition are already defined within dgryuter.sty.
-
-\begin{definition}
-This is a definition environment.
-\end{definition}
-	
-\begin{theorem}
-This is a theorem environment.
-\end{theorem}
-	
-\begin{proof}
-This is a proof environment.
-\end{proof}
-
-\subsection{Figures and Tables}
-The number of \textbf{Figures} should be limited to the absolute minimum. Images must be of good contrast and sufficiently high resolution for reproduction (minimum 600 dpi). Lettering of all figures should be uniform in style. Authors are encouraged to submit illustrations in color if necessary for their scientific content. Publication of color figures is provided free of charge both in online and print editions.
-
-When drawing bar graphs, use patterning/color instead of grey scales (faint shading may be lost upon reproduction).
-Each figure should be uploaded separately as .jpg-, .eps-, .pdf- or .tiff-file. The legends for the figures must be concise and self-explanatory. The key to the symbols in the figures should be included in the figure where possible. Otherwise, they should be included in the legend.
-
-A concise, self-explanatory caption should appear below \textbf{Figures and Tables}. Each table should be placed on a separate manuscript page including its caption. All figures and tables should be numbered and referred to in your document as Table 1 or Figure 1 (e.g. “See Table \ref{tab:Table1}”, “As Figure 2 indicates” etc.).
-
-\begin{table} [!ht]
-\caption{Sample table with header.}
-\begin{tabular}{rrl}
-Table head 1 	& Table head 2 	& Table head 3 	\\ \midrule
-10 						& 40 						& text A 				\\
-20						& 50						& text B 				\\
-30						& 60 						& text C 				\\
-\end{tabular}
-\label{tab:Table1}
-\end{table}
-
-\begin{table} [!ht]
-\caption{Sample table without header.}
-\begin{tabular}{rrrr}
-\starttabularbody %Table starts with the body
-First column 	& Second column 	& Third column 	& Fourth column	\\
-1 						& 2 							& 3 						& 4							\\
-4 						& 5 							& 6 						& 7 						\\
-8 						& 9 							& 11 						& 12 						\\
-\end{tabular}
-\label{tab:Table2}
-\end{table}
-
-\subsection{References}
-Please refer to the journal's website for more information on the reference style. 
-Sample references can be found here: \cite{carbonaro:2008} and \cite{farley:2010,antonyan,chen:2013,hofmann:2013,yong:2001}. All references should be collected at the end of the paper. 
-
-\section{Manuscript processing} 
-
-The \textbf{evaluation process} varies from journal to journal.
-
-\begin{itemize}
-    \item Single-blind review: the reviewers remain anonymous to the authors.
-    \item Double-blind review: the reviewers do not know who the authors are, nor do the authors know who has evaluated their manuscript.
-\end{itemize}
-Typically, at least two independent experts are invited to review a manuscript’s content. The manuscript is then either accepted, rejected, or returned for revision based on their evaluation.
-
-With many journals, you can propose reviewers who come from outside of your closest areas of academia. It is at the editors’ discretion whether to accept these proposals.
-
-
-\textbf{Galley proofs}: Before your contribution is published, you will receive a proof of the article to proofread. At this point in the publication process, there must be no more changes made to the content: only minor corrections in form and phrasing are possible.	
-		
-
-
-\begin{acknowledgement}
-  Please insert acknowledgments of the assistance of colleagues or similar notes of appreciation here.
-\end{acknowledgement}
-
-\begin{funding}
-  Please insert information concerning research grant support here (institution and grant number). Please provide for each funder the funder’s DOI according to https://doi.crossref.org/funderNames?mode=list.
-\end{funding}
-%\bibliographystyle{...}
-%\bibliography{...}
-
-}
 
 \begin{thebibliography}{9}
 %Please refer to the journal's website for the corresponding reference style.
-
-\mycomment{
-% -- Articles in journals    -- %
-\bibitem{carbonaro:2008}
-A. Carbonaro, G. Metafune and C. Spina, Parabolic Schrödinger operators, \emph{J. Math. Anal. Appl.} \textbf{343} (2008), 965–974.
-
-% -- Articles ahead of print -- %
-\bibitem{farley:2010}
-D. Farley and L. Sabalka, Presentations of graph braid groups, \emph{Forum Math.} (2010), DOI: 10.1515/form.2011.086.
-
-% -- Accepted articles       -- %
-\bibitem{antonyan}
-S. A. Antonyan and T. Dobrowolski, Locally contractible coset spaces, \emph{Forum Math.}, to appear.
-
-% -- Preprints               -- %
-\bibitem{chen:2013}
-Z.-Q. Chen and L. Wang, Uniqueness of stable processes with drift, preprint (2013), http://arxiv.org/pdf/1309.6414v1.
-
-% -- Books and Monographs    -- %
-\bibitem{hofmann:2013}
-K. H. Hofmann and S. A. Morris, \emph{The Structure of Compact Groups}, 3rd ed., De Gruyter Stud. Math. 25, De Gruyter, Berlin, 2013.
-
-% -- Contributions           -- %
-\bibitem{yong:2001}
-W.-A. Yong, Basic aspects of hyperbolic relaxation systems, in: \emph{Advances in the Theory of Shock Waves, Progr. Nonlinear Differential Equations Appl. 47}, Birkhäuser, Boston (2001), 259–305.
-
-% -- Thesis           			-- %
-\bibitem{king:1995}
-J. D. King, \emph{Thesis title}, Ph.D. thesis, University of Cambridge, 1995.
-
-% -- Proceedings       			-- %
-\bibitem{hay:2016}
-B. Hay, Drone tourism: a study of the current and potential use of drones in hospitality and tourism, in: \emph{CAUTHE 2016: the changing landscape of tourism and hospitality: the impact of emerging markets and emerging destinations}, Blue Mountains, Sydney, 8-11 February, 2016, pp. 49-68. 
-
-}
 
 \bibitem{gelman:1995}
 Gelman, A., Carlin, J. B., Stern, H. S., \& Rubin, D. B. (1995). \emph{Bayesian data analysis.} Chapman and Hall/CRC.
@@ -553,9 +388,7 @@ Muñoz-Pérez, I., Castañeda-Babarro, A., Santisteban, A. et al. Predictive per
 \bibitem{stan:2025}
 Stan User Guide: Regression Models. \url{https://mc-stan.org/docs/stan-users-guide/regression.html#hierarchical-regression}
 
-
 \end{thebibliography}
-
 
 %\newpage \newpage
 
@@ -578,14 +411,14 @@ Stan User Guide: Regression Models. \url{https://mc-stan.org/docs/stan-users-gui
 \begin{tabular}{c|c|cc|cc|cc}
  & extrap & \multicolumn{2}{c}{model1} & \multicolumn{2}{c}{model2} & \multicolumn{2}{c}{model3}  \\ \midrule 
 Distance & RMSE & RMSE & \% Improve & RMSE & \% Improve & RMSE & \% Improve\\ \midrule
-\csvreader[late after line = \\,]{../analysis/nyc_rmse.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/nyc_rmse.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcolvi & \csvcoliv & \csvcolvii & \csvcolv & \csvcolviii}   \midrule
 %& \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii & \csvcolviii %& \csvcolix & \csvcolx
-\csvreader[late after line = \\,]{../analysis/nyc_rmse2.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/nyc_rmse2.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcolvi & \csvcoliv & \csvcolvii & \csvcolv & \csvcolviii}   
 \end{tabular}
  \caption{ NEW YORK RMSE TABLE}
- \label{tab:rmse}
+ \label{tab:rmse2}
  \end{table}
  
   \begin{table}[!ht]
@@ -593,60 +426,50 @@ Distance & RMSE & RMSE & \% Improve & RMSE & \% Improve & RMSE & \% Improve\\ \m
 \begin{tabular}{c|c|ccc|ccc}
 &  \multicolumn{4}{c}{RMSE}  &  \multicolumn{3}{c}{\% Improvement from extrap}  \\ \midrule
 Distance & extrap & model1 & model2 & model3 & model1 & model2 & model3   \\ \midrule 
-\csvreader[late after line = \\,]{../analysis/bos_rmse.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/bos_rmse.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii & \csvcolviii}   \midrule 
-\csvreader[late after line = \\,]{../analysis/bos_rmse2.csv}{}%
+\csvreader[late after line = \\,]{../analysis/tables/bos_rmse2.csv}{}%
 {\csvcoli & \csvcolii  & \csvcoliii & \csvcolvi & \csvcoliv & \csvcolvii & \csvcolv & \csvcolviii}   
 \end{tabular}
  \caption{ALTERNATIVE FORMAT TO MAIN RMSE TABLES ABOVE}
- \label{tab:rmse}
  \end{table}
 
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=2.7in]{../analysis/nyc_data_scatter.png}
-    \includegraphics[width=2.7in]{../analysis/chi_data_scatter.png}
+    \includegraphics[width=2.7in]{../analysis/plots/nyc_data_scatter.png}
+    \includegraphics[width=2.7in]{../analysis/plots/chi_data_scatter.png}
     \caption{SCATTERPLOT (NEW YORK LEFT, CHICAGO RIGHT)}
 \end{figure*}
 
-
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=2.7in]{../analysis/nyc_rmse_bar.png}
-    \includegraphics[width=2.7in]{../analysis/chi_rmse_bar.png}
-    \includegraphics[width=2.7in]{../analysis/bos_rmse_bar.png}
+    \includegraphics[width=2.7in]{../analysis/plots/nyc_rmse_bar.png}
+    \includegraphics[width=2.7in]{../analysis/plots/chi_rmse_bar.png}
+    \includegraphics[width=2.7in]{../analysis/plots/bos_rmse_bar.png}
     \caption{RMSE AS BAR PLOT INSTEAD OF TABLE (NEW YORK LEFT, CHICAGO RIGHT, BOSTON BOTTOM)}
 \end{figure*}
 
-
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=2.7in]{../analysis/nyc_rmse_groups.png}
-    \includegraphics[width=2.7in]{../analysis/chi_rmse_groups.png}
+    \includegraphics[width=2.7in]{../analysis/plots/nyc_rmse_groups.png}
+    \includegraphics[width=2.7in]{../analysis/plots/chi_rmse_groups.png}
     \caption{RMSE GROUPED. (NEW YORK LEFT, CHICAGO RIGHT)}
 \end{figure*}
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=6.2in]{../analysis/nyc_rmse_gender_age.png}
+    \includegraphics[width=6.2in]{../analysis/plots/nyc_rmse_gender_age.png}
     \caption{RMSE  GROUPED AGE/GENDER (NEW YORK)}
-     \label{fig:breakdown}
 \end{figure*}
-
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=2.7in]{../analysis/nyc_intervals.png}
-    \includegraphics[width=2.7in]{../analysis/chi_intervals.png}
-     \includegraphics[width=2.7in]{../analysis/bos_intervals.png}
+    \includegraphics[width=2.7in]{../analysis/plots/nyc_intervals.png}
+    \includegraphics[width=2.7in]{../analysis/plots/chi_intervals.png}
+     \includegraphics[width=2.7in]{../analysis/plots/bos_intervals.png}
     \caption{CREDIBLE INTERVAL SIZES AND PROPORTION WITHIN INTERVAL (NEW YORK LEFT, CHICAGO RIGHT, BOSTON BOTTOM)}
 \end{figure*}
 %}
-
-
-
-
-
 
 \end{document}

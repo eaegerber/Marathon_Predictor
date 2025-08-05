@@ -37,7 +37,7 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     plt.ylabel("Frequency")
     plt.title(f"Distribution of Marathon Finish Times")
     plt.legend()
-    plt.savefig(f"analysis/plot_dist.png")
+    plt.savefig(f"analysis/plots/plot_dist.png")
     plt.close()
 
 
@@ -74,7 +74,9 @@ def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023], mks=[
     # plt.title("Comparing Extrapolated Estimates to True Finish At Different Stages of Race")
     plt.grid()
     plt.legend()#ncols=2
-    plt.savefig(f"analysis/{racename}_data_scatter.png", bbox_inches="tight")
+    filename = f"analysis/plots/{racename}_data_scatter.png"
+    plt.savefig(filename, bbox_inches="tight")
+    print(f"File saved: {filename}")
 
 
 def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar=True, rnd=3):
@@ -103,16 +105,18 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar
     plt.grid(True)
     plt.legend()
     if save_name != "":
-        plt.savefig(f"analysis/{save_name}_rmse{suff}.png", bbox_inches="tight")
-        print(f"File saved: analysis/{save_name}_rmse{suff}.png")
+        filename = f"analysis/plots/{save_name}_rmse{suff}.png"
+        plt.savefig(filename, bbox_inches="tight")
+        print(f"File saved: {filename}")
     plt.close()
 
     for lbl in labels:
         if lbl != "extrap":
             table_group[f"pcnt_{lbl}"] = 1 - (table_group[lbl] / table_group["extrap"])
 
-    table_group.round(rnd).to_csv(f"analysis/{save_name}_rmse.csv")
-    print(f"File saved: analysis/{save_name}_rmse.csv")
+    filename = f"analysis/tables/{save_name}_rmse.csv"
+    table_group.round(rnd).to_csv(filename)
+    print(f"File saved: {filename}")
     return table_group
 
 
@@ -147,8 +151,9 @@ def plot_finish_groups(test_data, label_pair, num=4, overall=True, save_name: st
     plt.xlabel("Distance Into Race (km)")
     plt.ylabel("Prediction Error (RMSE), in minutes")
     plt.title("Average Error By Finish Groups")
-    plt.savefig(f"analysis/{save_name}_rmse_groups.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_rmse_groups.png")
+    filename = f"analysis/plots/{save_name}_rmse_groups.png"
+    plt.savefig(filename, bbox_inches="tight")
+    print(f"File saved: {filename}")
     sns.reset_defaults()
     plt.close()
     return table_group
@@ -186,8 +191,9 @@ def plot_finish_age_gender(test_data, label_pair, num=4, overall=True,
         ax[i].grid(alpha=0.8)
         ax[i].set_xticklabels(mks, rotation=0)
 
-    plt.savefig(f"analysis/{save_name}_rmse_gender_age.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_rmse_gender_age.png")
+    filename = f"analysis/plots/{save_name}_rmse_gender_age.png"
+    plt.savefig(filename, bbox_inches="tight")
+    print(f"File saved: {filename}")
     sns.reset_defaults()
     plt.close()
     return
@@ -236,14 +242,16 @@ def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list =
     leg12 = ax1.legend([Line2D([0,1],[0,1], color=c) for c in colors[:n]], pred_names, loc="lower right")
     ax[1].add_artist(leg12)
 
-    plt.savefig(f"analysis/{save_name}_intervals.png", bbox_inches="tight")
-    print(f"File saved: analysis/{save_name}_intervals.png")
+    filename = f"analysis/plots/{save_name}_intervals"
+    plt.savefig(filename + ".png", bbox_inches="tight")
+    print(f"File saved: {filename}")
     plt.close()
 
-    big_table0.round(rnd).to_csv(f"analysis/{save_name}_int_size.csv")
-    print(f"File saved: analysis/{save_name}_int_sizes.csv")
-    big_table1.round(rnd).to_csv(f"analysis/{save_name}_int_checks.csv")
-    print(f"File saved: analysis/{save_name}_int_checks.csv")
+    filename = f"analysis/tables/{save_name}_int"
+    big_table0.round(rnd).to_csv(filename + "_sizes.csv")
+    print(filename + "sizes.csv")
+    big_table1.round(rnd).to_csv(filename + "_check.csv")
+    print(filename + "check.csv")
     return big_table0, big_table1
 
 
