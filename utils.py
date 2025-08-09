@@ -3,6 +3,7 @@
 from typing import Union
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 np.random.seed(2024)
 
@@ -212,6 +213,29 @@ def add_intervals_to_test(data_tbl, m_preds, pred_names):
             data[f"{pred_name}-size{conf}"] = b2 - b1
             data[f"{pred_name}-in{conf}"] = (test_true < b2) & (test_true > b1)
     return data
+
+def marathons_table():
+    pd.concat([pd.read_csv(f"analysis/tables/{race}_rmse.csv", index_col="dist").rename({"BL": f"BL_{race}", "M2": f"M2_{race}"}, axis=1)[[f"BL_{race}", f"M2_{race}"]] for race in ["bos", "nyc", "chi"]], axis=1).reset_index().to_csv("analysis/tables/marathons.csv", index=False)
+    
+
+def all_tests(data, test_list, p=0.05):
+    tbl = []
+    for lbl1, lbl2 in test_list:
+        row = []
+        arr1, arr2 = data[lbl1], data[lbl2]
+        value = stats.ks_2samp(arr1, arr2).pvalue
+        row.append(value)
+        value = stats.wilcoxon(arr1, arr2).pvalue
+        row.append(value)
+        value = stats.cramervonmises_2samp(arr1, arr2).pvalue
+        row.append(value)
+        value = stats.anderson_ksamp([arr1, arr2]).pvalue
+        row.append(value)
+        tbl.append(row)
+
+    idx = [f"{lbl1}-{lbl2}" for lbl1, lbl2 in test_list]
+    return pd.DataFrame(tbl, index=idx, columns=["KS", "Wilcoxon", "CVM", "AD"]).round(4).replace(0.0000, "<0.0001")
+
 
 if __name__ == '__main__':
     pass
