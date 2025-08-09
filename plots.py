@@ -163,7 +163,7 @@ def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=
                            save_name: str = "bos", palette="viridis", grouping="age"):
     """Create RMSE plot grouped by age group, for each gender"""
     fig, ax = plt.subplots(ncols=2, sharey=True)
-    fig.set_figheight(12)
+    fig.set_figheight(10)
     fig.set_figwidth(20)
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
 
