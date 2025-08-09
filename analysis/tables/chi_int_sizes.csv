@@ -1,4 +1,4 @@
-dist,model1-size50,model2-size50,model1-size80,model2-size80,model1-size95,model2-size95
+dist,M1-size50,M2-size50,M1-size80,M2-size80,M1-size95,M2-size95
 5K,29.603,29.621,56.864,56.914,88.761,88.809
 10K,27.194,27.055,52.165,51.892,81.178,80.766
 15K,24.768,23.375,47.428,44.746,73.624,69.348

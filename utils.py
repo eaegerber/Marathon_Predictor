@@ -175,13 +175,13 @@ def other_stats(data, finish, rnd=3, save_name: str = "bos"):
     print(f"File saved: analysis/tables/{save_name}_rmse2.csv")
     return tbl
 
-def get_table(test_data, model_preds):
+def get_table(test_data, model_preds, baseline_name="extrap"):
     """Get table that outpus all information to compare models"""
     test_new = test_data.copy()
     y_true = (42195 / 60) / test_new["finish"]
     extrap = (42195 / 60) / test_new["total_pace"]
     
-    test_new["extrap"] = extrap - y_true
+    test_new[baseline_name] = extrap - y_true
     for name, pred in model_preds.items():
         test_new[name] = ((42195 / 60) / pred) - y_true
 
@@ -192,12 +192,12 @@ def rmse_table(test_data, labels: list):
     table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
     return table_group
 
-def group_data(test_data, group_feat, num_groups=4, pref="G", group_name="group", lbl="model2"):
+def group_data(test_data, group_feat, lbls:list, num_groups=4, pref="G", group_name="group"):
     data = test_data.copy()
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
     bins = np.percentile(data[group_feat], [100 * i / num_groups for i in range(num_groups)])
     data[group_name] = [f"{pref}{g}" for g in np.digitize(data[group_feat], bins=bins)]
-    group = data.groupby(["dist", group_name])[["extrap", lbl]].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks].swaplevel(0, 1, axis=1)
+    group = data.groupby(["dist", group_name])[lbls].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks].swaplevel(0, 1, axis=1)
     group2 = group.set_axis([f"{a}_{b}" for a, b in group.columns], axis=1).sort_index(axis=1)
     return group2
 

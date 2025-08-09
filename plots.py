@@ -16,27 +16,29 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
     train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
     cmap = {"bos": "darkgreen", "nyc": "blue", "chi": "crimson"}
+    nmap = {"bos": "Boston", "nyc": "New York", "chi": "Chicago"}
 
     fig, ax = plt.subplots()
     fig.set_figheight(8)
-    fig.set_figwidth(10)
+    fig.set_figwidth(11)
     for lbl, train_data in train_list:
         # minutes_dist = train_data[train_data["Year"].isin(yrs)]["Finish Net"] // 60
         minutes_dist = train_data["Finish Net"] // 60
         bins = binning(minutes_dist)
         minutes_dist.hist(bins=bins, alpha=0.2, density=True, color=cmap[lbl], ax=ax)
         d2 = np.bincount(minutes_dist)
-        ax.plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=0.8, label=lbl)
+        ax.plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=0.8, label=nmap[lbl])
     
     # ax.set_facecolor(("orange", 0.05))
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     
-    plt.xticks(ticks, labels=labels)
+    plt.xticks(ticks, labels=labels, fontsize=12)
+    plt.yticks(fontsize=12)
     plt.xlim(ticks[1] - 15, ticks[-2] - 45)
-    plt.xlabel(f"Time (HH:MM)")
-    plt.ylabel("Frequency")
-    plt.title(f"Distribution of Marathon Finish Times")
-    plt.legend()
+    plt.xlabel(f"Time (HH:MM)", fontsize=15)
+    plt.ylabel("Frequency", fontsize=15)
+    plt.title(f"Distribution of Marathon Finish Times", fontsize=18)
+    plt.legend(fontsize=15)
     plt.savefig(f"analysis/plots/plot_dist.png")
     plt.close()
 
@@ -55,9 +57,9 @@ def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023], mks=[
     sns.set_palette("mako", n_colors=len(mks)) #crest #mako
     print(sns.color_palette())
     sns.jointplot(data=table, x="total_pace", y="finish", hue="dist", alpha=0.8)# hueorder=["red", "blue", "green"])
-    plt.plot([ticks[0] - 30, ticks[-1] + 30], [ticks[0] - 30, ticks[-1] + 30], color="red", label='trad est', alpha=0.6)
-    plt.xlabel("Finish Estimate Extrapolated from Total Pace So Far (HH:MM)")
-    plt.ylabel("True Finish Time (HH:MM)")
+    plt.plot([ticks[0] - 30, ticks[-1] + 30], [ticks[0] - 30, ticks[-1] + 30], color="red", label='', alpha=0.6)
+    plt.xlabel("Finish Estimate Extrapolated from Total Pace (HH:MM)", fontsize=12)
+    plt.ylabel("True Finish Time (HH:MM)", fontsize=12)
 
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     plt.xticks(ticks, labels=labels, rotation=0)
@@ -79,13 +81,14 @@ def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023], mks=[
     print(f"File saved: {filename}")
 
 
-def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar=True, rnd=3):
+def plot_rmse(test_data: pd.DataFrame, models: list, baseline: str, save_name: str = "bos", bar=True, rnd=3):
     """Create table and plot (line or bar) to compare the RMSE for multiple mdoels. Labels
       specifies the models to be shown."""
     fig, ax = plt.subplots()
     fig.set_figheight(8)
-    fig.set_figwidth(10)
+    fig.set_figwidth(11)
 
+    labels = models + [baseline]
     colors = [f"C{i}" for i in range(len(labels))]
     # sns.set_palette("viridis", n_colors=len(colors), desat=0.8)
     table_group = rmse_table(test_data, labels).sort_index(axis=1)
@@ -98,21 +101,21 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar
         
     # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
     #ax.set_facecolor(("orange", 0.05))
-    plt.xlabel("Distance Into Race (km)")
-    plt.ylabel("Prediction Error (RMSE), in minutes")
-    plt.xticks(rotation=60)
-    plt.title("Average Error For Each Model")
+    plt.xticks(fontsize=12, rotation=0)
+    plt.yticks(fontsize=12)
+    plt.xlabel("Distance Into Race (km)", fontsize=15)
+    plt.ylabel("Prediction Error (RMSE), in minutes", fontsize=15)
+    plt.title("Average Error For Each Model", fontsize=18)
+    plt.legend(fontsize=15)
     plt.grid(True)
-    plt.legend()
     if save_name != "":
         filename = f"analysis/plots/{save_name}_rmse{suff}.png"
         plt.savefig(filename, bbox_inches="tight")
         print(f"File saved: {filename}")
     plt.close()
 
-    for lbl in labels:
-        if lbl != "extrap":
-            table_group[f"pcnt_{lbl}"] = 1 - (table_group[lbl] / table_group["extrap"])
+    for lbl in models:
+        table_group[f"pcnt_{lbl}"] = 1 - (table_group[lbl] / table_group[baseline])
 
     filename = f"analysis/tables/{save_name}_rmse.csv"
     table_group.round(rnd).to_csv(filename)
@@ -120,37 +123,34 @@ def plot_rmse(test_data: pd.DataFrame, labels: list, save_name: str = "bos", bar
     return table_group
 
 
-def plot_finish_groups(test_data, label_pair, num=4, overall=True, save_name: str = "bos", 
+def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True, save_name: str = "bos", 
                        palette="viridis", grouping="finish"): # grouping="age"
     """Create RMSE plot grouped by finish time"""
     fig, ax = plt.subplots()
     fig.set_figheight(8)
-    fig.set_figwidth(10)
+    fig.set_figwidth(11)
     sns.set_palette(palette, n_colors=num, desat=0.8)
     colors1 = sns.color_palette()
     # colors1 = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][:num]
     colors2 = [to_rgba(c, alpha=0.3) for c in colors1]
     mixed_colors = [val for pair in zip(colors2, colors1) for val in pair]
 
-    table_group = group_data(test_data, group_feat=grouping, num_groups=num, pref="Q", group_name="group", lbl="model2")
-    table_group.plot(style='.-', width=0.8, #alpha=1, 
-        color=mixed_colors, edgecolor="black", linewidth=0.3,
-        ax=ax, legend=False, kind="bar")
+    table_group = group_data(test_data, group_feat=grouping, num_groups=num, pref="Q", group_name="group", lbls=[baseline, model])
+    table_group.plot(style='.-', width=0.8, color=mixed_colors, edgecolor="black", linewidth=0.3, ax=ax, legend=False, kind="bar")
 
     if overall:
-        rmse = rmse_table(test_data, label_pair)
-        plt.plot(range(8), rmse[label_pair[0]], color="black", alpha=0.4, linestyle=':',  marker=".", label='overall_extrap')
-        plt.plot(range(8), rmse[label_pair[1]], color="black", alpha=0.4, linestyle='-',  marker=".", label='overall_model')
+        rmse = rmse_table(test_data, [baseline, model])
+        plt.plot(range(8), rmse[baseline], color="black", alpha=0.4, linestyle=':',  marker=".", label=f"TOTAL_{baseline}")
+        plt.plot(range(8), rmse[model], color="black", alpha=0.4, linestyle='-',  marker=".", label=f"TOTAL_{model}")
     # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
     # ax.set_facecolor(("orange", 0.05))
-    plt.legend()
-    # ax.legend(ncols=1, loc="upper right")
     plt.grid(alpha=0.8)
-    plt.xticks(range(8), rotation=0)
-    plt.yticks(range(0, int(table_group.max(axis=None) + 5), 5))
-    plt.xlabel("Distance Into Race (km)")
-    plt.ylabel("Prediction Error (RMSE), in minutes")
-    plt.title("Average Error By Finish Groups")
+    plt.legend(fontsize=12)
+    plt.xticks(range(8), rotation=0, fontsize=12)
+    plt.yticks(range(0, int(table_group.max(axis=None) + 5), 5), fontsize=12)
+    plt.xlabel("Distance Into Race (km)", fontsize=15)
+    plt.ylabel("Prediction Error (RMSE), in minutes", fontsize=15)
+    plt.title("Average Error By Finish Groups", fontsize=18)
     filename = f"analysis/plots/{save_name}_rmse_groups.png"
     plt.savefig(filename, bbox_inches="tight")
     print(f"File saved: {filename}")
@@ -159,12 +159,12 @@ def plot_finish_groups(test_data, label_pair, num=4, overall=True, save_name: st
     return table_group
 
 
-def plot_finish_age_gender(test_data, label_pair, num=4, overall=True, 
+def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=True, 
                            save_name: str = "bos", palette="viridis", grouping="age"):
     """Create RMSE plot grouped by age group, for each gender"""
     fig, ax = plt.subplots(ncols=2, sharey=True)
     fig.set_figheight(12)
-    fig.set_figwidth(24)
+    fig.set_figwidth(20)
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
 
     sns.set_palette(palette, n_colors=num, desat=0.8)
@@ -174,20 +174,21 @@ def plot_finish_age_gender(test_data, label_pair, num=4, overall=True,
 
     for i, g in enumerate(["F", "M"]):
         test_data2 = test_data[test_data["male"] == i]
-        table_group = group_data(test_data2, group_feat=grouping, num_groups=num, pref="AG", group_name="group", lbl="model2")
+        table_group = group_data(test_data2, group_feat=grouping, num_groups=num, pref="AG", group_name="group", lbls=[baseline, model])
         table_group.plot(style='.-', width=0.8, #alpha=1, 
             color=mixed_colors,edgecolor="black", linewidth=0.3,
             ax=ax[i], legend=False, kind="bar")
 
         if overall:
-            rmse = rmse_table(test_data2, label_pair)
-            ax[i].plot(range(8), rmse[label_pair[0]], color="black", alpha=0.4, linestyle=':',  marker=".", label='overall_extrap')
-            ax[i].plot(range(8), rmse[label_pair[1]], color="black", alpha=0.4, linestyle='-',  marker=".", label='overall_model')
+            rmse = rmse_table(test_data2, [baseline, model])
+            ax[i].plot(range(8), rmse[baseline], color="black", alpha=0.4, linestyle=':',  marker=".", label=f"TOTAL_{baseline}")
+            ax[i].plot(range(8), rmse[model], color="black", alpha=0.4, linestyle='-',  marker=".", label=f"TOTAL_{model}")
 
-        ax[i].set(xlabel="Distance Into Race (km)", ylabel="Prediction Error (RMSE), in minutes", 
-            title=f"Average Error By Finish Groups - {g}") # , ylim=(0.2, 1)
-    
-        ax[i].legend()
+        #ax[i].set(xlabel="Distance Into Race (km)", ylabel="Prediction Error (RMSE), in minutes", title=f"Average Error By Finish Groups - {g}") # , ylim=(0.2, 1)
+        ax[i].set_xlabel("Distance Into Race (km)", fontsize=15)
+        ax[i].set_ylabel("Prediction Error (RMSE), in minutes", fontsize=15)
+        ax[i].set_title(f"Average Error By Finish Groups - {g}", fontsize=18)
+        ax[i].legend(fontsize=15)
         ax[i].grid(alpha=0.8)
         ax[i].set_xticklabels(mks, rotation=0)
 
@@ -201,9 +202,9 @@ def plot_finish_age_gender(test_data, label_pair, num=4, overall=True,
 def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list = [50, 80, 95], 
                         linestyles = ["-.", "--.", ":."], save_name: str = "bos", rnd=3):
     """Plot the interval check and sizes for each model specified in pred_names"""
-    fig, ax = plt.subplots(nrows=2)
-    fig.set_figheight(18)
-    fig.set_figwidth(12)
+    fig, ax = plt.subplots(ncols=2)
+    fig.set_figheight(12)
+    fig.set_figwidth(20)
 
     n = len(pred_names)
     colors = [f"C{i}" for i in range(len(pred_names))] * len(intervals)
