@@ -32,11 +32,11 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     # ax.set_facecolor(("orange", 0.05))
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     
-    plt.xticks(ticks, labels=labels, fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xticks(ticks, labels=labels, fontsize=15)
+    plt.yticks(fontsize=15)
     plt.xlim(ticks[1] - 15, ticks[-2] - 45)
-    plt.xlabel(f"Time (HH:MM)", fontsize=15)
-    plt.ylabel("Frequency", fontsize=15)
+    plt.xlabel(f"Time (HH:MM)", fontsize=16)
+    plt.ylabel("Frequency", fontsize=16)
     plt.title(f"Distribution of Marathon Finish Times", fontsize=18)
     plt.legend(fontsize=15)
     plt.savefig(f"analysis/plots/plot_dist.png")
@@ -185,10 +185,10 @@ def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=
             ax[i].plot(range(8), rmse[model], color="black", alpha=0.4, linestyle='-',  marker=".", label=f"TOTAL_{model}")
 
         #ax[i].set(xlabel="Distance Into Race (km)", ylabel="Prediction Error (RMSE), in minutes", title=f"Average Error By Finish Groups - {g}") # , ylim=(0.2, 1)
-        ax[i].set_xlabel("Distance Into Race (km)", fontsize=15)
-        ax[i].set_ylabel("Prediction Error (RMSE), in minutes", fontsize=15)
+        ax[i].set_xlabel("Distance Into Race (km)", fontsize=16)
+        ax[i].set_ylabel("Prediction Error (RMSE), in minutes", fontsize=16)
         ax[i].set_title(f"Average Error By Finish Groups - {g}", fontsize=18)
-        ax[i].legend(fontsize=15)
+        ax[i].legend(fontsize=12)
         ax[i].grid(alpha=0.8)
         ax[i].set_xticklabels(mks, rotation=0)
 
