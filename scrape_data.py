@@ -242,6 +242,37 @@ def scrape_chi_data(yr=23):
     pd.DataFrame(results, columns = cols + mks).to_csv(f"raw_data/chicago/chi{yr}.csv")
     return
 
+
+def get_age_gender_chi(pages_map, yr=23):
+    tbls = []
+    for g, pages in pages_map.items():
+        info = []
+        for n in range(pages):
+            # url = f"https://chicago-history.r.mikatiming.com/2023/?page={n+1}&num_results=1000&event_main_group=20{yr}&sex={g}&pid=search&pidp=start"
+            url = f"https://results.chicagomarathon.com/2024/?page={n+1}&num_results=1000&event_main_group=20{yr}&sex={g}&pid=search&pidp=start"
+            
+            print(url)
+            response = requests.post(url, allow_redirects=True)
+            r = response.text.split("\n")
+            lines = [line for line in r if ("Division" in line) or ("BIB" in line)]
+            
+            info += lines
+            print(len(lines), len(info))
+            time.sleep(1)
+
+        print('a', len(info))
+        bibs = [info[idx].split("</div>")[1] for idx in range(len(info)) if idx%2==0]
+        ages = [info[idx].split("</div>")[1] for idx in range(len(info)) if idx%2==1]
+        print(len(bibs), len(ages))
+        assert len(bibs) == len(ages), f"{len(bibs)} == {len(ages)}"
+        gender = [g] * len(bibs)
+        df = pd.DataFrame(list(zip(bibs, ages, gender)), columns=["bibs", "ages", "gender"])
+        tbls.append(df[df["bibs"] != "BIB"])
+
+    tbl = pd.concat(tbls)
+    tbl.to_csv(f"raw_data/chicago/chi_age_year{yr}.csv")
+    return tbl
+
 ##### > CHI ####
 
 if __name__ == "__main__":

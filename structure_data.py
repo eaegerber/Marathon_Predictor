@@ -79,15 +79,14 @@ def process_raw_chi_data(
     data = pd.concat(data_list)
     data = data.replace('–', None)
     data = data.rename({"Finish": "Official Time", "HALF": "Half", "age": "Age", "gender": "M/F"}, axis=1)
-    data = data.drop(["Gender", "Short"], axis=1) # fix
     data = data.dropna()
     cols = ['5K', '10K', '15K', '20K', 'Half', '25K', '30K', '35K', '40K', 'Official Time']
     for col in cols:
         data[col] = data[col].apply(str_to_int_time)
 
-    data["Age"] = "-"
-    data["M/F"] = "-"
     data["Name"] = data["Name (CTZ)"]
+    data = data.replace({"19 and under": "0-19", "80+": "80-100"})
+    data["Age"] = data["Age"].str.split("-").str[1] # upper bound of age group
     data = data[['Name', 'Age', 'M/F'] + cols + ['Year']]
 
     for col in cols:
@@ -105,6 +104,6 @@ if __name__ == "__main__":
     # years = ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "22", "23", "24", "25"]
     # process_raw_bos_data(yrs=years, store=True, mins=False, path="processed_data/full_data_bos.csv")
     years = ["21", "22", "23", "24"]
-    process_raw_bos_data(yrs=years, store=True, path="processed_data/full_data_bos.csv")
+    # process_raw_bos_data(yrs=years, store=True, path="processed_data/full_data_bos.csv")
     # process_raw_nyc_data(yrs=years, store=True, path="processed_data/full_data_nyc.csv")
     # process_raw_chi_data(yrs=years, store=True, path="processed_data/full_data_chi.csv")
