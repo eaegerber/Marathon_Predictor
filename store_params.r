@@ -40,6 +40,8 @@ for (num in 1:3) {
   }
 }
 
+# fit
+# saveRDS(fit, file = "my_stan_fit.rds")
 
 # d2 <- apply(extract(fit)$finish_test, 2, sd)
 # print(names(extract(fit)))

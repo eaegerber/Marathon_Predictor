@@ -87,10 +87,7 @@ def process_df(data):
         "id": new_idx, "dist": new_dist, "curr_pace": new_last, "total_pace": new_mark, "finish": new_fin,
         "age": new_age, "gender": new_gender, "year": new_year
     })
-    new_df["prop"] = new_df["dist"].apply(lambda x: conv1[x] / conv1["Finish Net"])
-    new_df["propleft"] = 1 - new_df["prop"]
     new_df["male"] = (new_df['gender'] == "M").astype(int)
-    new_df["propxcurr"] = new_df["prop"] * new_df["curr_pace"]
     new_df["malexage"] = new_df["male"] * new_df["age"]
     new_df["alpha"] = 1
     new_df['lvl'] = (new_df['dist'].str[:-1].astype(int) / 5).astype(int)
@@ -101,15 +98,14 @@ def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test
     based on training and test data specifications for size and years. Returns train and test data"""
     d = pd.read_csv(f"processed_data/full_data_{racename}.csv")
     train_years, test_years =  d[d["Year"].isin(train_lis)], d[d["Year"].isin(test_lis)]
-
-    if size_train != None:
-        train_years = train_years.sample(n=size_train, random_state=seed, replace=False)
-    
-    if size_test != None:
-        test_years = test_years.sample(n=size_test, random_state=seed, replace=False)
-    
     xtrain = process_df(train_years)
     xtest = process_df(test_years)
+
+    if size_train != None:
+        xtrain = xtrain.sample(n=size_train, random_state=seed).sort_values("lvl")
+    
+    if size_test != None:
+        xtest = xtest.sample(n=size_test, random_state=seed).sort_values("lvl")
 
     if save:
         xtrain.to_csv(f"processed_data/train_{racename}.csv")
