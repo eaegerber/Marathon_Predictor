@@ -112,6 +112,11 @@ def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test
         xtest.to_csv(f"processed_data/test_{racename}.csv")
     return xtrain, xtest
 
+def save_data(race_list, size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], seed=2025):
+    for race in race_list:
+        get_data(racename=race, size_train=size_train, size_test=size_test, train_lis=train_lis, test_lis=test_lis, save=True, seed=seed)
+    return
+
 #######
 
 def get_preds(test_data, stan_data, feats_lis, name="stan_pred", propleft=False, full=False):
@@ -158,18 +163,18 @@ def get_predictions(test_data, stan_path, feats_lis, full=False):
     return np.concatenate(list(result))
 
 def other_stats(data, finish, rnd=3, save_name: str = "bos"):
-    """Return overall RMSE and R-squared values for specified columns in data"""
+    """Return overall MAE and R-squared values for specified columns in data"""
     ftime = (42195/60) / finish
     tss = (((ftime) - (ftime).mean()) ** 2).sum()
-    tbl = data.apply(lambda x: ((x ** 2).mean() ** 0.5, 1 - ((x ** 2).sum()/ tss)))  # overall rmse, rsquared
-    tbl = tbl.set_index([["Overall RMSE", "Overall R-squared"]])
+    tbl = data.apply(lambda x: (x.abs().mean(), 1 - ((x ** 2).sum()/ tss)))  # overall MAE, R^2
+    tbl = tbl.set_index([["OVRL MAE", "OVRL R^2"]])
 
     for lbl in tbl:
         if lbl != "extrap":
             tbl[f"pcnt_{lbl}"] = "-"#1 - (tbl[lbl] / tbl["extrap"])
 
-    tbl.round(rnd).to_csv(f"analysis/tables/{save_name}_rmse2.csv")
-    print(f"File saved: analysis/tables/{save_name}_rmse2.csv")
+    tbl.round(rnd).to_csv(f"analysis/tables/{save_name}_error2.csv")
+    print(f"File saved: analysis/tables/{save_name}_error2.csv")
     return tbl
 
 def get_table(test_data, model_preds, baseline_name="extrap"):
@@ -184,9 +189,10 @@ def get_table(test_data, model_preds, baseline_name="extrap"):
 
     return test_new
 
-def rmse_table(test_data, labels: list):
+def error_table(test_data, labels: list):
+    """table of MAE values from predictions"""
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    table_group = test_data.groupby(["dist"])[labels].apply(lambda x: (x ** 2).mean() ** 0.5).loc[mks]
+    table_group = test_data.groupby(["dist"])[labels].apply(lambda x: x.abs().mean()).loc[mks]
     return table_group
 
 def group_data(test_data, group_feat, lbls:list, num_groups=4, pref="G", group_name="group"):
@@ -194,7 +200,7 @@ def group_data(test_data, group_feat, lbls:list, num_groups=4, pref="G", group_n
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
     bins = np.percentile(data[group_feat], [100 * i / num_groups for i in range(num_groups)])
     data[group_name] = [f"{pref}{g}" for g in np.digitize(data[group_feat], bins=bins)]
-    group = data.groupby(["dist", group_name])[lbls].apply(lambda x: (x ** 2).mean() ** 0.5).unstack().loc[mks].swaplevel(0, 1, axis=1)
+    group = data.groupby(["dist", group_name])[lbls].apply(lambda x: x.abs().mean()).unstack().loc[mks].swaplevel(0, 1, axis=1)
     group2 = group.set_axis([f"{a}_{b}" for a, b in group.columns], axis=1).sort_index(axis=1)
     return group2
 
@@ -211,10 +217,10 @@ def add_intervals_to_test(data_tbl, m_preds, pred_names):
     return data
 
 def marathons_table():
-    pd.concat([pd.read_csv(f"analysis/tables/{race}_rmse.csv", index_col="dist").rename({"BL": f"BL_{race}", "M2": f"M2_{race}"}, axis=1)[[f"BL_{race}", f"M2_{race}"]] for race in ["bos", "nyc", "chi"]], axis=1).reset_index().to_csv("analysis/tables/marathons.csv", index=False)
+    pd.concat([pd.read_csv(f"analysis/tables/{race}_error.csv", index_col="dist").rename({"BL": f"BL_{race}", "M2": f"M2_{race}"}, axis=1)[[f"BL_{race}", f"M2_{race}"]] for race in ["bos", "nyc", "chi"]], axis=1).reset_index().to_csv("analysis/tables/marathons.csv", index=False)
     
 
-def all_tests(data, test_list, p=0.05):
+def all_tests(data, test_list, savename):
     tbl = []
     for lbl1, lbl2 in test_list:
         row = []
@@ -230,7 +236,9 @@ def all_tests(data, test_list, p=0.05):
         tbl.append(row)
 
     idx = [f"{lbl1}-{lbl2}" for lbl1, lbl2 in test_list]
-    return pd.DataFrame(tbl, index=idx, columns=["KS", "Wilcoxon", "CVM", "AD"]).round(4).replace(0.0000, "<0.0001")
+    df = pd.DataFrame(tbl, index=idx, columns=["KS", "Wilcoxon", "CVM", "AD"]).round(4).replace(0.0000, "<0.0001")
+    df.to_csv(savename)
+    return df
 
 
 if __name__ == '__main__':
