@@ -162,20 +162,13 @@ def get_predictions(test_data, stan_path, feats_lis, full=False):
     result = test_data.groupby("lvl", group_keys=False)[feats_lis + ["lvl"]].apply(lambda x: _preds(x, feats_lis, stan_data, full))
     return np.concatenate(list(result))
 
-def other_stats(data, finish, rnd=3, save_name: str = "bos"):
+def other_stats(data, finish, rnd=3):
     """Return overall MAE and R-squared values for specified columns in data"""
     ftime = (42195/60) / finish
     tss = (((ftime) - (ftime).mean()) ** 2).sum()
     tbl = data.apply(lambda x: (x.abs().mean(), 1 - ((x ** 2).sum()/ tss)))  # overall MAE, R^2
-    tbl = tbl.set_index([["OVRL MAE", "OVRL R^2"]])
-
-    for lbl in tbl:
-        if lbl != "extrap":
-            tbl[f"pcnt_{lbl}"] = "-"#1 - (tbl[lbl] / tbl["extrap"])
-
-    tbl.round(rnd).to_csv(f"analysis/tables/{save_name}_error2.csv")
-    print(f"File saved: analysis/tables/{save_name}_error2.csv")
-    return tbl
+    tbl = tbl.set_index([["Overall MAE", "Overall $R^2$"]])
+    return tbl.round(rnd)
 
 def get_table(test_data, model_preds, baseline_name="extrap"):
     """Get table that outpus all information to compare models"""

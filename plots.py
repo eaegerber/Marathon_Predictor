@@ -117,15 +117,14 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
     for lbl in models:
         table_group[f"pcnt_{lbl}"] = 1 - (table_group[lbl] / table_group[baseline])
 
+    if other:
+        other_tbl = other_stats(test_data[[baseline] + models], test_data["finish"])
+        table_group = pd.concat([table_group, other_tbl])
+        
     filename = f"analysis/tables/{save_name}_error.csv"
     table_group.round(rnd).to_csv(filename)
     print(f"File saved: {filename}")
-    
-    if other:
-        other_tbl = other_stats(test_data[[baseline] + models], test_data["finish"], save_name=save_name)
-        return (table_group, other_tbl)
-    else:
-        return table_group
+    return table_group
 
 
 def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True, save_name: str = "bos", 
