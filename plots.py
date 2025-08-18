@@ -20,25 +20,24 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
 
     fig, ax = plt.subplots()
     fig.set_figheight(8)
-    fig.set_figwidth(11)
+    fig.set_figwidth(12)
     for lbl, train_data in train_list:
-        # minutes_dist = train_data[train_data["Year"].isin(yrs)]["Finish Net"] // 60
         minutes_dist = train_data["Finish Net"] // 60
         bins = binning(minutes_dist)
         minutes_dist.hist(bins=bins, alpha=0.2, density=True, color=cmap[lbl], ax=ax)
         d2 = np.bincount(minutes_dist)
-        ax.plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=0.8, label=nmap[lbl])
+        ax.plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=1, label=nmap[lbl])
     
     # ax.set_facecolor(("orange", 0.05))
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     
-    plt.xticks(ticks, labels=labels, fontsize=15)
-    plt.yticks(fontsize=15)
+    plt.xticks(ticks, labels=labels, fontsize=18)
+    plt.yticks(fontsize=18)
     plt.xlim(ticks[1] - 15, ticks[-2] - 45)
-    plt.xlabel(f"Time (HH:MM)", fontsize=16)
-    plt.ylabel("Frequency", fontsize=16)
-    plt.title(f"Distribution of Marathon Finish Times", fontsize=18)
-    plt.legend(fontsize=15)
+    plt.xlabel(f"Time (HH:MM)", fontsize=20)
+    plt.ylabel("Frequency", fontsize=20)
+    plt.title(f"Distribution of Marathon Finish Times", fontsize=22)
+    plt.legend(fontsize=18)
     plt.savefig(f"analysis/plots/plot_dist.png")
     plt.close()
 
@@ -120,7 +119,7 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
     if other:
         other_tbl = other_stats(test_data[[baseline] + models], test_data["finish"])
         table_group = pd.concat([table_group, other_tbl])
-        
+
     filename = f"analysis/tables/{save_name}_error.csv"
     table_group.round(rnd).to_csv(filename)
     print(f"File saved: {filename}")
@@ -149,12 +148,12 @@ def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True
     # fig.patch.set_facecolor(('yellow', 0.05)) # This changes the grey to white
     # ax.set_facecolor(("orange", 0.05))
     plt.grid(alpha=0.8)
-    plt.legend(fontsize=12)
-    plt.xticks(range(8), rotation=0, fontsize=12)
-    plt.yticks(range(0, int(table_group.max(axis=None) + 5), 5), fontsize=12)
-    plt.xlabel("Distance Into Race (km)", fontsize=15)
-    plt.ylabel("Prediction Error (MAE), in minutes", fontsize=15)
-    plt.title("Average Error By Finish Groups", fontsize=18)
+    plt.legend(fontsize=15)
+    plt.xticks(range(8), rotation=0, fontsize=16)
+    plt.yticks(range(0, int(table_group.max(axis=None) + 5), 5), fontsize=16)
+    plt.xlabel("Distance Into Race (km)", fontsize=18)
+    plt.ylabel("Prediction Error (MAE), in minutes", fontsize=18)
+    plt.title("Average Error By Finish Groups", fontsize=22)
     filename = f"analysis/plots/{save_name}_error_groups.png"
     plt.savefig(filename, bbox_inches="tight")
     print(f"File saved: {filename}")
@@ -189,10 +188,13 @@ def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=
             ax[i].plot(range(8), error[model], color="black", alpha=0.4, linestyle='-',  marker=".", label=f"TOTAL_{model}")
 
         #ax[i].set(xlabel="Distance Into Race (km)", ylabel="Prediction Error (MAE), in minutes", title=f"Average Error By Finish Groups - {g}") # , ylim=(0.2, 1)
-        ax[i].set_xlabel("Distance Into Race (km)", fontsize=16)
-        ax[i].set_ylabel("Prediction Error (MAE), in minutes", fontsize=16)
-        ax[i].set_title(f"Average Error By Finish Groups - {g}", fontsize=18)
-        ax[i].legend(fontsize=12)
+        yrange = range(0, int(table_group.max(axis=None) + 5), 5)
+        ax[i].set_xticks(ticks=range(8), labels=mks, fontsize=16, rotation=0)
+        ax[i].set_yticks(ticks=yrange, labels=yrange, fontsize=16)
+        ax[i].set_xlabel("Distance Into Race (km)", fontsize=18)
+        ax[i].set_ylabel("Prediction Error (MAE), in minutes", fontsize=18)
+        ax[i].set_title(f"Average Error By Age Groups - {g}", fontsize=22)
+        ax[i].legend(fontsize=16)
         ax[i].grid(alpha=0.8)
         ax[i].set_xticklabels(mks, rotation=0)
 
@@ -263,7 +265,7 @@ def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list =
 if __name__ == "__main__":
     print('start')
     get_plot_dist()
-    get_extrap_scatter("bos") # , mks=["5K", "15K", "25K", "35K"])
-    get_extrap_scatter("nyc")
-    get_extrap_scatter("chi")
+    # get_extrap_scatter("bos") # , mks=["5K", "15K", "25K", "35K"])
+    # get_extrap_scatter("nyc")
+    # get_extrap_scatter("chi")
     print('fin')
