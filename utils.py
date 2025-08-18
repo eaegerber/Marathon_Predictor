@@ -233,6 +233,23 @@ def all_tests(data, test_list, savename):
     df.to_csv(savename)
     return df
 
+def save_param_values(race, rnd=4):
+    """Save paramater values into analysis/tables"""
+    param_lists = []
+    params = pd.read_csv(f"stan_results/model2/params_{race}.csv", index_col="Unnamed: 0")
+    p1 = params.describe().T["mean"]
+    p2 = params.describe().T["std"]
+    param_lists.append(p1[[f"beta.{i}.1" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('alpha_mean'))
+    param_lists.append(p2[[f"beta.{i}.1" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('alpha_std'))
+    param_lists.append(p1[[f"beta.{i}.2" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('total_pace_mean'))
+    param_lists.append(p2[[f"beta.{i}.2" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('total_pace_std'))
+    param_lists.append(p1[[f"beta.{i}.3" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('curr_pace_mean'))
+    param_lists.append(p2[[f"beta.{i}.3" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('curr_pace_std'))
+    param_lists.append(p1[[f"sigma.{i}" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('sigma_mean'))
+    param_lists.append(p2[[f"sigma.{i}" for i in range(1, 9)]].round(rnd).reset_index(drop=True).rename('sigma_std'))
+    param_df = pd.concat(param_lists, axis=1)
+    param_df.to_csv(f"analysis/tables/{race}_params.csv")
+    return param_df
 
 if __name__ == '__main__':
     pass
