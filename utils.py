@@ -188,10 +188,11 @@ def error_table(test_data, labels: list):
     table_group = test_data.groupby(["dist"])[labels].apply(lambda x: x.abs().mean()).loc[mks]
     return table_group
 
-def group_data(test_data, group_feat, lbls:list, num_groups=4, pref="G", group_name="group"):
+def group_data(test_data, group_feat, lbls:list, num_groups=4, pref="G", group_name="group", bins=None):
     data = test_data.copy()
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    bins = np.percentile(data[group_feat], [100 * i / num_groups for i in range(num_groups)])
+    if bins == None:
+        bins = np.percentile(data[group_feat], [100 * i / num_groups for i in range(num_groups)])
     data[group_name] = [f"{pref}{g}" for g in np.digitize(data[group_feat], bins=bins)]
     group = data.groupby(["dist", group_name])[lbls].apply(lambda x: x.abs().mean()).unstack().loc[mks].swaplevel(0, 1, axis=1)
     group2 = group.set_axis([f"{a}_{b}" for a, b in group.columns], axis=1).sort_index(axis=1)
@@ -212,6 +213,26 @@ def add_intervals_to_test(data_tbl, m_preds, pred_names):
 def marathons_table():
     pd.concat([pd.read_csv(f"analysis/tables/{race}_error.csv", index_col="dist").rename({"BL": f"BL_{race}", "M2": f"M2_{race}"}, axis=1)[[f"BL_{race}", f"M2_{race}"]] for race in ["bos", "nyc", "chi"]], axis=1).reset_index().to_csv("analysis/tables/marathons.csv", index=False)
     
+def get_race_info():
+    race_dfs = []
+    for race, name in [("bos", "Boston"), ("nyc", "New York"), ("chi", "Chicago")]:
+        df = pd.read_csv(f"processed_data/full_data_{race}.csv")
+        df["Marathon"] = name
+        race_dfs.append(df)
+
+    big_df = pd.concat(race_dfs)
+    arr1 = df.groupby(["Marathon", "Year"])["Name"].count()#.keys()
+    arr2 = big_df[big_df["M/F"] == "M"].groupby(["Marathon", "Year"])["Name"].count()
+    arr3 = big_df[(big_df["M/F"] == "F") | (big_df["M/F"] == "W")].groupby(["Marathon", "Year"])["Name"].count()#.values
+
+    arrs = {"Total": arr1, "M": arr2, "W": arr3}
+
+    for age, lower, upper in [["A1", 0, 30], ["A2", 31, 40], ["A3", 41, 50], ["A4", 51, 101]]:
+    # for age, lower, upper in [["A1", 0, 34], ["A2", 35, 45], ["A3", 46, 101]]:
+        arrs[f"AG {lower}-{upper}"] = big_df[(big_df["Age"] >= lower) & (big_df["Age"] <= upper)].groupby(["Marathon", "Year"])["Name"].count()
+
+    pd.DataFrame(arrs).to_csv("analysis/tables/race_info.csv")
+    return big_df
 
 def all_tests(data, test_list, savename):
     tbl = []

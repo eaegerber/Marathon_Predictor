@@ -14,13 +14,21 @@ random.seed(2024)
 def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     """Plot distribution of finish times for a list of races in specified years"""
     ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
-    train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
-    cmap = {"bos": "darkgreen", "nyc": "blue", "chi": "crimson"}
-    nmap = {"bos": "Boston", "nyc": "New York", "chi": "Chicago"}
+    # train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
+    # cmap = {"bos": "darkgreen", "nyc": "blue", "chi": "crimson"}
+    # nmap = {"bos": "Boston", "nyc": "New York", "chi": "Chicago"}
+    df = pd.read_csv(f"processed_data/full_data_bos.csv")
+    train_list = [(r, df[df["M/F"] == r]) for r in ["M", "F"]]
+    cmap = {"M": "blue", "F": "crimson"}
+    nmap = {"M": "Male", "F": "Female"}
+
+    # train_list = [(r, df[(df["Age"] >= lower) & (df["Age"] <= higher)]) for r, lower, higher in [["1", 0, 30], ["2", 31, 40], ["3", 41, 50], ["4", 51, 100]]]
+    # cmap = {"1": "red", "2": "darkgreen", "3": "blue", "4": "purple"}
+    # nmap = {"1": "Under 30", "2": "31 - 40", "3": "41 - 50", "4": "Above 50"}
 
     fig, ax = plt.subplots()
     fig.set_figheight(8)
-    fig.set_figwidth(12)
+    fig.set_figwidth(11)
     for lbl, train_data in train_list:
         minutes_dist = train_data["Finish Net"] // 60
         bins = binning(minutes_dist)
@@ -38,7 +46,7 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     plt.ylabel("Frequency", fontsize=20)
     plt.title(f"Distribution of Marathon Finish Times", fontsize=22)
     plt.legend(fontsize=18)
-    plt.savefig(f"analysis/plots/plot_dist.png")
+    plt.savefig(f"analysis/plots/plot_dist2.png")
     plt.close()
 
 
@@ -163,7 +171,7 @@ def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True
 
 
 def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=True, 
-                           save_name: str = "bos", palette="crest", grouping="age"):
+                           save_name: str = "bos", palette="crest", grouping="age", bins=None):
     """Create MAE plot grouped by age group, for each gender"""
     fig, ax = plt.subplots(ncols=2, sharey=True)
     fig.set_figheight(10)
@@ -177,7 +185,7 @@ def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=
 
     for i, g in enumerate(["F", "M"]):
         test_data2 = test_data[test_data["male"] == i]
-        table_group = group_data(test_data2, group_feat=grouping, num_groups=num, pref="AG", group_name="group", lbls=[baseline, model])
+        table_group = group_data(test_data2, group_feat=grouping, num_groups=num, pref="G", group_name="group", lbls=[baseline, model], bins=bins)
         table_group.plot(style='.-', width=0.8, #alpha=1, 
             color=mixed_colors,edgecolor="black", linewidth=0.3,
             ax=ax[i], legend=False, kind="bar")
