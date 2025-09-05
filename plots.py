@@ -13,7 +13,7 @@ random.seed(2024)
 
 def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     """Plot distribution of finish times for a list of races in specified years"""
-    ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
+    ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540)#, 600)
     # train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
     # cmap = {"bos": "darkgreen", "nyc": "blue", "chi": "crimson"}
     # nmap = {"bos": "Boston", "nyc": "New York", "chi": "Chicago"}
@@ -21,10 +21,11 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     train_list = [(r, df[df["M/F"] == r]) for r in ["M", "F"]]
     cmap = {"M": "blue", "F": "crimson"}
     nmap = {"M": "Male", "F": "Female"}
-
-    # train_list = [(r, df[(df["Age"] >= lower) & (df["Age"] <= higher)]) for r, lower, higher in [["1", 0, 30], ["2", 31, 40], ["3", 41, 50], ["4", 51, 100]]]
-    # cmap = {"1": "red", "2": "darkgreen", "3": "blue", "4": "purple"}
-    # nmap = {"1": "Under 30", "2": "31 - 40", "3": "41 - 50", "4": "Above 50"}
+    train_list = [(r, df[(df["Age"] >= lower) & (df["Age"] <= higher)]) for r, lower, higher in [["1", 0, 30], ["2", 31, 40], ["3", 41, 50], ["4", 51, 100]]]
+    nmap = {"1": "Under 30", "2": "31 - 40", "3": "41 - 50", "4": "Above 50"}
+    sns.set_palette("crest", n_colors=4, desat=0.8)
+    colors1 = sns.color_palette()
+    cmap = {str(i+1): colors1[i] for i in range(4)}
 
     fig, ax = plt.subplots()
     fig.set_figheight(8)
@@ -40,13 +41,13 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     
     plt.xticks(ticks, labels=labels, fontsize=18)
-    plt.yticks(fontsize=18)
+    plt.yticks(ax.get_yticks()[::2], fontsize=18) # plt.yticks(fontsize=18)
     plt.xlim(ticks[1] - 15, ticks[-2] - 45)
     plt.xlabel(f"Time (HH:MM)", fontsize=20)
     plt.ylabel("Frequency", fontsize=20)
     plt.title(f"Distribution of Marathon Finish Times", fontsize=22)
     plt.legend(fontsize=18)
-    plt.savefig(f"analysis/plots/plot_dist2.png")
+    plt.savefig(f"analysis/plots/plot_dist3.png")
     plt.close()
 
 
