@@ -96,7 +96,7 @@ def get_from_info(
     marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
     shows = [m for m in marks if m in list(race.get_stored_paces()["dist"])]
     shows = [m for m in shows if m in show]
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(10, 6))
 
     p_array = race.posterior_array(shows)
     percentile_info = table_info(p_array, show=shows)
@@ -107,18 +107,21 @@ def get_from_info(
         info = percentile_info[dist]
         info_strings = (dist, f'{info["mean"]}', f'{info["lower50"]}-{info["upper50"]}', f'{info["lower80"]}-{info["upper80"]}', f'{info["lower95"]}-{info["upper95"]}')
         table.append(info_strings)
-        sns.kdeplot(p_array[i], color=colors[i], label=dist)
+        sns.kdeplot(p_array[i], color=colors[i], label=dist, linewidth=2, alpha=0.9)
 
 
     x_labels = plt.xticks()[0]
-    plt.xticks(x_labels, [int_to_str_time(60 * t, no_secs=True) for t in x_labels])
-    plt.xlabel("Time (HH:MM)", fontsize=15)
-    plt.ylabel("Probability", fontsize=15)
-    plt.title(f"{name} Live Prediction", fontsize=17)
+    y_labels = plt.yticks()[0]
+    plt.xticks(x_labels, [int_to_str_time(60 * t, no_secs=True) for t in x_labels], fontsize=16)
+    plt.yticks(y_labels, [round(float(y), 3) for y in y_labels], fontsize=16)
+    
+    plt.xlabel("Time (HH:MM)", fontsize=18)
+    plt.ylabel("Probability", fontsize=18)
+    plt.title(f"{name} Live Prediction", fontsize=20)
     if actual:
         plt.vlines(actual, 0, plt.yticks()[0].max(), linestyles="dashed", color="black", label="actual")
 
-    plt.legend()
+    plt.legend(fontsize=16)
     plt.savefig("analysis/plots/plot_live.jpg", dpi=300)
     print('done')
     return fig, pd.DataFrame(table, columns=["dist", "median", "range_50", "range_80", "range_95"])
