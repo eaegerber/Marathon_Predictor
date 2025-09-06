@@ -159,7 +159,8 @@ def _preds(x, feats, params, full=True):
     
 def get_predictions(test_data, stan_path, feats_lis, full=False):
     stan_data = pd.read_csv(stan_path)
-    result = test_data.groupby("lvl", group_keys=False)[feats_lis + ["lvl"]].apply(lambda x: _preds(x, feats_lis, stan_data, full))
+    group = test_data.groupby("lvl", group_keys=False)
+    result = group.apply(lambda x: _preds(x, feats_lis, stan_data, full))
     return np.concatenate(list(result))
 
 def other_stats(data, finish, rnd=3):

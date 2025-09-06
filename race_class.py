@@ -4,16 +4,16 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_preds
+from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_predictions
 
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-stan_dict = {loc: pd.read_csv(f"stan_results/model2/params_{loc}.csv") for loc in ["bos", "nyc", "chi"]}
+stan_dict = {loc: f"stan_results/model2/params_{loc}.csv" for loc in ["bos", "nyc", "chi"]}
 
 class RaceSplits():
 
     marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    last_dist =  {"5K":"5K",  "10K":"5K",  "15K":"10K",  "20K":"15K",  "25K":"20K",  "30K":"25K", 
-                     "35K": "30K", "40K": "35K", "Finish": "40K", "Finish": "Finish"}
+    last_dist =  {"5K": "5K",  "10K": "5K",  "15K": "10K",  "20K": "15K",  "25K": "20K",  
+                  "30K": "25K", "35K": "30K", "40K": "35K", "Finish": "40K", "Finish": "Finish"}
 
     def __init__(self):
         self.stored_times = {}
@@ -54,12 +54,11 @@ class RaceSplits():
 
     def posterior_array(self, show: list = ["10K", "15K"]):
         info = self.get_stored_paces()
-        info = info[info["dist"].isin(show)] 
-        info['propxcurr'] = info["prop"] * info["curr_pace"]
-        info['propleft'] = 1 - info['prop']
-        preds = (42195 / 60) / get_preds(
-            info, stan_dict[self.city], feats_lis = ["total_pace", "curr_pace", "prop"], propleft=True, full=True
-            )
+        info = info[info["dist"].isin(show)]
+        info['alpha'] = 1
+        info['lvl'] = (info['dist'].str[:-1].astype(int) / 5).astype(int)
+        feats_lis = ["alpha", "total_pace", "curr_pace"]
+        preds = (42195 / 60) / get_predictions(info, stan_dict[self.city], feats_lis=feats_lis, full=True)
         return preds
     
     def stored_dists(self):
@@ -67,7 +66,7 @@ class RaceSplits():
     
     def stored_times_table(self):
         mlis = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-        df = pd.DataFrame([(k, int_to_str_time(v)) for k, v in self.stored_times.items()], columns=["dist", "time"])
+        df = pd.DataFrame([(k, int_to_str_time(60 * v)) for k, v in self.stored_times.items()], columns=["dist", "time"])
         return df
     
     def reset_race(self):
@@ -83,7 +82,7 @@ def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
     percentile_names = ["lower95", "lower80", "lower50", "mean", "upper50", "upper80", "upper95"]
     table = pd.DataFrame(percentiles, index=percentile_names, columns=show)
     for col in table:
-        table[col] = table[col].apply(lambda x: int_to_str_time(x))
+        table[col] = table[col].apply(lambda x: int_to_str_time(60 * x, no_secs=True))
     return table
 
 
@@ -97,7 +96,7 @@ def get_from_info(
     marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
     shows = [m for m in marks if m in list(race.get_stored_paces()["dist"])]
     shows = [m for m in shows if m in show]
-    fig = plt.figure(figsize=(12, 10))
+    fig = plt.figure(figsize=(12, 8))
 
     p_array = race.posterior_array(shows)
     percentile_info = table_info(p_array, show=shows)
@@ -112,7 +111,7 @@ def get_from_info(
 
 
     x_labels = plt.xticks()[0]
-    plt.xticks(x_labels, [int_to_str_time(t) for t in x_labels])
+    plt.xticks(x_labels, [int_to_str_time(60 * t, no_secs=True) for t in x_labels])
     plt.xlabel("Time (HH:MM)", fontsize=15)
     plt.ylabel("Probability", fontsize=15)
     plt.title(f"{name} Live Prediction", fontsize=17)
@@ -120,6 +119,7 @@ def get_from_info(
         plt.vlines(actual, 0, plt.yticks()[0].max(), linestyles="dashed", color="black", label="actual")
 
     plt.legend()
+    plt.savefig("analysis/plots/plot_live.jpg", dpi=300)
     print('done')
     return fig, pd.DataFrame(table, columns=["dist", "median", "range_50", "range_80", "range_95"])
 
@@ -174,3 +174,10 @@ if __name__ == "__main__":
     print(rs.stored_times)
     print(rs.stored_times_table())
 
+    # nucr_filename = "processed_data/nucr_runners.csv"
+    # nucr = pd.read_csv(nucr_filename)
+    # r = RaceSplits()
+    # t = get_race_for_person(0, nucr)
+    # print(t)
+    # p = get_from_info(t[0])
+    # print(p)
