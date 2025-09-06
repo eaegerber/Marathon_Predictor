@@ -1,14 +1,8 @@
-# Marathon_Predictor
+# Marathon Finish Time Predictor
 Bayesian model for in-race marathon finish time predictions.
 
-Code for the paper [Quantifying Uncertainty in Live Marathon Finish Time Predictions](https://github.com/bonyejekwe/Marathon_Predictor/blob/main/paper.pdf)
+Code for the paper [Quantifying Uncertainty in Live Marathon Finish Time Predictions](https://github.com/bonyejekwe/Marathon_Predictor/blob/main/writeup/paper.pdf). View the Shiny app [here](https://bonyejekwe.shinyapps.io/marathon_predictor) (code found in `app.py`).
 
-**Abstract:** In the middle of a marathon, a runner’s expected finish time is commonly estimated by extrapolating the average pace covered so far, assuming it to be constant for the rest of the race. These predictions have two key issues: the 
-estimates do not consider the in-race context that can determine if a runner is likely to finish faster or slower than 
-expected, and the prediction is a single point estimate with no information about uncertainty. We implement two approaches 
-to address these issues: Bayesian linear regression and quantile regression. Both methods incorporate information from all 
-splits in the race and allow us to quantify uncertainty around the predicted finish times. We utilized 15 years of Boston 
-Marathon data (312,805 runners total) to evaluate and compare both approaches. Finally, we developed an app for runners to 
-visualize their estimated finish distribution in real time.
+**Abstract:** During a marathon, a runner’s expected finish time is commonly estimated by extrapolating the average pace covered so far, assuming it is held constant for the rest of the race. Two problems arise when predicting finish times this way: the estimates do not consider in-race context that can determine if a runner is likely to finish faster or slower than expected, and the prediction is a single point estimate with no information about uncertainty. To address these issues, we implement a hierarchical Bayesian linear regression model that incorporates information from all splits in a race and allows quantification of uncertainty around the predicted finish times. Data from three marathons (Boston, New York, and Chicago) across 4 years (2021-2024) are utilized to establish the improved performance of this Bayesian approach over the traditional baseline method. Finally, we develop an app for runners to visualize their estimated finish distribution in real time.
 
-To set up and run project locally, follow the steps in `analysis.ipynb`.
+**Data:** Scraped from the websites of the [Boston](https://www.baa.org/races/boston-marathon/results), [New York](https://www.nyrr.org/tcsnycmarathon/results/race-results), and [Chicago](https://www.chicagomarathon.com/runners/race-results) Marathons, and stored in `\raw_data` (processed data found in `\processed_data`).
