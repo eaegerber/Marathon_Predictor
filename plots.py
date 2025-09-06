@@ -8,28 +8,19 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 from matplotlib.lines import Line2D
-from utils import get_data, binning, int_to_str_time, error_table, group_data, other_stats #, Union
-random.seed(2024)
+from utils import get_data, binning, int_to_str_time, error_table, group_data, other_stats, get_test_preds #, Union
+random.seed(2025)
 
-def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
+def get_plot_race_dists(races=["bos", "nyc", "chi"]):
     """Plot distribution of finish times for a list of races in specified years"""
-    ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540)#, 600)
-    # train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
-    # cmap = {"bos": "darkgreen", "nyc": "blue", "chi": "crimson"}
-    # nmap = {"bos": "Boston", "nyc": "New York", "chi": "Chicago"}
-    df = pd.read_csv(f"processed_data/full_data_bos.csv")
-    train_list = [(r, df[df["M/F"] == r]) for r in ["M", "F"]]
-    cmap = {"M": "blue", "F": "crimson"}
-    nmap = {"M": "Male", "F": "Female"}
-    train_list = [(r, df[(df["Age"] >= lower) & (df["Age"] <= higher)]) for r, lower, higher in [["1", 0, 30], ["2", 31, 40], ["3", 41, 50], ["4", 51, 100]]]
-    nmap = {"1": "Under 30", "2": "31 - 40", "3": "41 - 50", "4": "Above 50"}
-    sns.set_palette("crest", n_colors=4, desat=0.8)
-    colors1 = sns.color_palette()
-    cmap = {str(i+1): colors1[i] for i in range(4)}
+    ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540, 600)
+    train_list = [(r, pd.read_csv(f"processed_data/full_data_{r}.csv")) for r in races]
+    cmap = {"bos": "darkgreen", "nyc": "blue", "chi": "crimson"}
+    nmap = {"bos": "Boston", "nyc": "New York", "chi": "Chicago"}
 
     fig, ax = plt.subplots()
     fig.set_figheight(8)
-    fig.set_figwidth(11)
+    fig.set_figwidth(12)
     for lbl, train_data in train_list:
         minutes_dist = train_data["Finish Net"] // 60
         bins = binning(minutes_dist)
@@ -41,29 +32,75 @@ def get_plot_dist(races=["bos", "nyc", "chi",], yrs=[2021, 2022, 2023, 2024]):
     labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
     
     plt.xticks(ticks, labels=labels, fontsize=18)
-    plt.yticks(ax.get_yticks()[::2], fontsize=18) # plt.yticks(fontsize=18)
+    plt.yticks(fontsize=18)
     plt.xlim(ticks[1] - 15, ticks[-2] - 45)
     plt.xlabel(f"Time (HH:MM)", fontsize=20)
     plt.ylabel("Frequency", fontsize=20)
     plt.title(f"Distribution of Marathon Finish Times", fontsize=22)
     plt.legend(fontsize=18)
-    plt.savefig(f"analysis/plots/plot_dist3.png")
+    plt.savefig(f"analysis/plots/plot_dists.jpg", dpi=300)
     plt.close()
 
+def get_plot_race_subgroup(race="bos"):
+    """Plot distribution of finish times for a list of races in specified years"""
+    fig, ax = plt.subplots(ncols=2, sharey=True)
+    fig.set_figheight(8)
+    fig.set_figwidth(20)
 
-def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023], mks=["10K", "20K", "30K"]):
+    ticks = (60, 120, 180, 240, 300, 360, 420, 480, 540)
+    df = pd.read_csv(f"processed_data/full_data_{race}.csv")
+
+    train_list = [(r, df[df["M/F"] == r]) for r in ["M", "F"]]
+    cmap = {"M": "blue", "F": "crimson"}
+    nmap = {"M": "Male", "F": "Female"}
+
+    for lbl, train_data in train_list:
+        minutes_dist = train_data["Finish Net"] // 60
+        bins = binning(minutes_dist)
+        minutes_dist.hist(bins=bins, alpha=0.2, density=True, color=cmap[lbl], ax=ax[0])
+        d2 = np.bincount(minutes_dist)
+        ax[0].plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=1, label=nmap[lbl])
+        
+    train_list = [(r, df[(df["Age"] >= lower) & (df["Age"] <= higher)]) for r, lower, higher in [["1", 0, 30], ["2", 31, 40], ["3", 41, 50], ["4", 51, 100]]]
+    nmap = {"1": "Under 30", "2": "31 - 40", "3": "41 - 50", "4": "Above 50"}
+    sns.set_palette("crest", n_colors=4, desat=0.8)
+    colors1 = sns.color_palette()
+    cmap = {str(i+1): colors1[i] for i in range(4)}
+
+    for lbl, train_data in train_list:
+        minutes_dist = train_data["Finish Net"] // 60
+        bins = binning(minutes_dist)
+        minutes_dist.hist(bins=bins, alpha=0.2, density=True, color=cmap[lbl], ax=ax[1])
+        d2 = np.bincount(minutes_dist)
+        ax[1].plot(range(len(d2)), d2 / sum(d2), color=cmap[lbl], linewidth=1, label=nmap[lbl])
+    
+    # ax.set_facecolor(("orange", 0.05))
+    labels = [int_to_str_time(60 * t, no_secs=True) for t in ticks]
+    yticks=ax[0].get_yticks()[::2]
+    ax[0].set_ylabel("Frequency", fontsize=20)
+    for i, group in [[0, "Age"], [1, "Gender"]]:
+        ax[i].set_xticks(ticks, labels=labels, fontsize=18)
+        ax[i].set_xlim(ticks[1] - 15, ticks[-2] - 45)
+        ax[i].set_xlabel(f"Time (HH:MM)", fontsize=20)
+        ax[i].set_yticks(yticks, labels=yticks, fontsize=18)
+        ax[i].set_title(f"Distribution by {group}", fontsize=22)
+        ax[i].legend(fontsize=18)
+
+    plt.savefig(f"analysis/plots/plot_dist_{race}_both.jpg", dpi=300)
+    plt.close()
+
+def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2021, 2022, 2023], mks=["10K", "20K", "30K"]):
     """Get scatter plot comparing extrapolated finish times to actual finish times for a given race"""
     train_data, _ = get_data(racename=racename, size_train=sample_size, train_lis=yrs)
     table = train_data[train_data["dist"].isin(mks)].copy()
     table[["total_pace", "finish"]] = table[["total_pace", "finish"]].apply(lambda x: (42195 / 60) / x)
     
     if racename == "bos":
-        ticks = (90, 150, 210, 270, 330, 390)
+        ticks = (90, 150, 210, 270, 330, 390, 450)
     else:
         ticks = (90, 150, 210, 270, 330, 390, 450, 510)
 
     sns.set_palette("mako", n_colors=len(mks)) #crest #mako
-    print(sns.color_palette())
     sns.jointplot(data=table, x="total_pace", y="finish", hue="dist", alpha=0.8)# hueorder=["red", "blue", "green"])
     plt.plot([ticks[0] - 30, ticks[-1] + 30], [ticks[0] - 30, ticks[-1] + 30], color="red", label='', alpha=0.6)
     plt.xlabel("Finish Estimate Extrapolated from Total Pace (HH:MM)", fontsize=12)
@@ -83,11 +120,10 @@ def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2022, 2023], mks=[
     plt.ylim(ticks[0] - 30, ticks[-1] + 30)
     # plt.title("Comparing Extrapolated Estimates to True Finish At Different Stages of Race")
     plt.grid()
-    plt.legend()#ncols=2
-    filename = f"analysis/plots/{racename}_data_scatter.png"
-    plt.savefig(filename, bbox_inches="tight")
+    plt.legend() # ncols=2)
+    filename = f"analysis/plots/{racename}_data_scatter.jpg"
+    plt.savefig(filename, bbox_inches="tight", dpi=300)
     print(f"File saved: {filename}")
-
 
 def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: str = "bos", bar=True, rnd=3, other=True):
     """Create table and plot (line or bar) to compare the MAE for multiple mdoels. Labels
@@ -97,6 +133,7 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
     fig.set_figwidth(11)
 
     labels = models + [baseline]
+    sns.reset_defaults()
     colors = [f"C{i}" for i in range(len(labels))]
     # sns.set_palette("viridis", n_colors=len(colors), desat=0.8)
     table_group = error_table(test_data, labels).sort_index(axis=1)
@@ -117,8 +154,8 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
     plt.legend(fontsize=15)
     plt.grid(True)
     if save_name != "":
-        filename = f"analysis/plots/{save_name}_error{suff}.png"
-        plt.savefig(filename, bbox_inches="tight")
+        filename = f"analysis/plots/{save_name}_error{suff}.jpg"
+        plt.savefig(filename, bbox_inches="tight", dpi=300)
         print(f"File saved: {filename}")
     plt.close()
 
@@ -163,8 +200,8 @@ def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True
     plt.xlabel("Distance Into Race (km)", fontsize=18)
     plt.ylabel("Prediction Error (MAE), in minutes", fontsize=18)
     plt.title("Average Error By Finish Groups", fontsize=22)
-    filename = f"analysis/plots/{save_name}_error_groups.png"
-    plt.savefig(filename, bbox_inches="tight")
+    filename = f"analysis/plots/{save_name}_error_groups.jpg"
+    plt.savefig(filename, bbox_inches="tight", dpi=300)
     print(f"File saved: {filename}")
     sns.reset_defaults()
     plt.close()
@@ -207,8 +244,8 @@ def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=
         ax[i].grid(alpha=0.8)
         ax[i].set_xticklabels(mks, rotation=0)
 
-    filename = f"analysis/plots/{save_name}_error_gender_age.png"
-    plt.savefig(filename, bbox_inches="tight")
+    filename = f"analysis/plots/{save_name}_error_gender_age.jpg"
+    plt.savefig(filename, bbox_inches="tight", dpi=300)
     print(f"File saved: {filename}")
     sns.reset_defaults()
     plt.close()
@@ -259,7 +296,7 @@ def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list =
     ax[1].add_artist(leg12)
 
     filename = f"analysis/plots/{save_name}_intervals"
-    plt.savefig(filename + ".png", bbox_inches="tight")
+    plt.savefig(filename + ".jpg", bbox_inches="tight", dpi=300)
     print(f"File saved: {filename}")
     plt.close()
 
@@ -270,11 +307,33 @@ def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list =
     print(filename + "check.csv")
     return big_table0, big_table1
 
+def plots_for_race(test_pred_data, race, models, baseline, comp_model):
+    """Function for all plots except interval data"""
+    tbl = plot_error(test_pred_data, models, baseline, save_name=race, bar=True, other=True)
+    a = plot_finish_groups(test_pred_data, model=comp_model, baseline=baseline, save_name=race)
+    plot_finish_age_gender(test_pred_data, model=comp_model, baseline=baseline, save_name=race, grouping="age", bins=[0, 30, 40, 50])
+    return tbl
 
 if __name__ == "__main__":
     print('start')
-    get_plot_dist()
-    # get_extrap_scatter("bos") # , mks=["5K", "15K", "25K", "35K"])
-    # get_extrap_scatter("nyc")
-    # get_extrap_scatter("chi")
+    get_plot_race_dists()
+    get_plot_race_subgroup(race="bos")
+    print('a')
+    # size, mks = 10000, ["10K", "20K", "30K"]
+    # get_extrap_scatter("bos", sample_size=size, mks=mks)
+    # get_extrap_scatter("nyc", sample_size=size, mks=mks)
+    # get_extrap_scatter("chi", sample_size=size, mks=mks)
+    # print('all_plots')
+
+    # for race in ["bos", "nyc", "chi"]:
+    #     # get_extrap_scatter(race, sample_size=size, mks=mks)
+    #     size1, size2 = 2000, 20000
+    #     train_yr, test_yr = [2021, 2022, 2023], [2024]
+    #     train, test = get_data(racename=race, size_train=size1, size_test=size2, train_lis=train_yr, test_lis=test_yr, save=False)
+
+    #     models, baseline = ["M1", "M2", "M3"], "BL"
+    #     test_preds = get_test_preds(test, race, baseline=baseline)
+    #     error_tbl = plots_for_race(test_preds, race, models, baseline, comp_model="M2")
+    #     print(f"Plotted:  {race}")
+
     print('fin')
