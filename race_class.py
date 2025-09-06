@@ -112,16 +112,16 @@ def get_from_info(
 
     x_labels = plt.xticks()[0]
     y_labels = plt.yticks()[0]
-    plt.xticks(x_labels, [int_to_str_time(60 * t, no_secs=True) for t in x_labels], fontsize=16)
-    plt.yticks(y_labels, [round(float(y), 3) for y in y_labels], fontsize=16)
+    plt.xticks(x_labels, [int_to_str_time(60 * t, no_secs=True) for t in x_labels])#, fontsize=16)
+    plt.yticks(y_labels, [round(float(y), 3) for y in y_labels])#, fontsize=16)
     
-    plt.xlabel("Time (HH:MM)", fontsize=18)
-    plt.ylabel("Probability", fontsize=18)
-    plt.title(f"{name} Live Prediction", fontsize=20)
+    plt.xlabel("Time (HH:MM)")#, fontsize=18)
+    plt.ylabel("Probability")#, fontsize=18)
+    plt.title(f"{name} Live Prediction")#, fontsize=20)
     if actual:
         plt.vlines(actual, 0, plt.yticks()[0].max(), linestyles="dashed", color="black", label="actual")
 
-    plt.legend(fontsize=16)
+    plt.legend()#fontsize=16)
     plt.savefig("analysis/plots/plot_live.jpg", dpi=300)
     print('done')
     return fig, pd.DataFrame(table, columns=["dist", "median", "range_50", "range_80", "range_95"])
