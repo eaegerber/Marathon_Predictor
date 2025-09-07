@@ -222,7 +222,7 @@ def get_race_info():
         race_dfs.append(df)
 
     big_df = pd.concat(race_dfs)
-    arr1 = df.groupby(["Marathon", "Year"])["Name"].count()#.keys()
+    arr1 = big_df.groupby(["Marathon", "Year"])["Name"].count()
     arr2 = big_df[big_df["M/F"] == "M"].groupby(["Marathon", "Year"])["Name"].count()
     arr3 = big_df[(big_df["M/F"] == "F") | (big_df["M/F"] == "W")].groupby(["Marathon", "Year"])["Name"].count()#.values
 
