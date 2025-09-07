@@ -273,15 +273,19 @@ def save_param_values(race, rnd=4):
     param_df.to_csv(f"analysis/tables/{race}_params.csv")
     return param_df
 
-def get_test_preds(test_data, race: str, baseline = "BL"):
+def get_test_preds(test_data, race: str, baseline = "BL", full=False):
     model_info = [
         ("M1", f"stan_results/model1/params_{race}.csv", ["alpha", "total_pace"]),
         ("M2", f"stan_results/model2/params_{race}.csv", ["alpha", "total_pace", "curr_pace"]),
         ("M3", f"stan_results/model3/params_{race}.csv", ["alpha", "total_pace", "curr_pace", "male", "age"]),
     ]
-    mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=False) for (name, path, feats) in model_info}
-    test2 = get_table(test_data, mpreds, baseline_name=baseline)
-    return test2
+    mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=full) for (name, path, feats) in model_info}
+    if full:
+        mpreds2 = {k: (42195 / 60) / v for k, v in mpreds.items()}
+        return mpreds2
+    else:
+        test2 = get_table(test_data, mpreds, baseline_name=baseline)
+        return test2
 
 if __name__ == '__main__':
     pass
