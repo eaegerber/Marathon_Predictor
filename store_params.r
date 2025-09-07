@@ -4,6 +4,7 @@
 # example(stan_model, package = "rstan", run.dontrun = TRUE)
 
 # getwd()
+set.seed(2025)
 library("rstan") # observe startup messages
 
 features1 <- c("alpha", "total_pace")
