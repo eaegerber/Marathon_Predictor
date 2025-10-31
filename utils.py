@@ -78,6 +78,10 @@ def process_df(data):
             last = data["5K"]
         else:
             last = data[dist] - data[last_map[dist]]
+        # if dist == "5K":
+        #     new_last.extend([0] * len(data))
+        # else:
+        #     new_last.extend(conv1["5K"] / last)
         new_last.extend(conv1["5K"] / last)
         new_age.extend(data["Age"])
         new_gender.extend(data["M/F"])
@@ -88,8 +92,9 @@ def process_df(data):
         "age": new_age, "gender": new_gender, "year": new_year
     })
     new_df["male"] = (new_df['gender'] == "M").astype(int)
-    new_df["malexage"] = new_df["male"] * new_df["age"]
     new_df["alpha"] = 1
+    new_df["age_t"] = new_df["age"] / 100
+    new_df["agegroup"] = np.digitize(new_df["age"], bins=[0, 30, 40, 50, 100])
     new_df['lvl'] = (new_df['dist'].str[:-1].astype(int) / 5).astype(int)
     return new_df
 
@@ -278,7 +283,7 @@ def get_test_preds(test_data, race: str, baseline = "BL", full=False):
     model_info = [
         ("M1", f"stan_results/model1/params_{race}.csv", ["alpha", "total_pace"]),
         ("M2", f"stan_results/model2/params_{race}.csv", ["alpha", "total_pace", "curr_pace"]),
-        ("M3", f"stan_results/model3/params_{race}.csv", ["alpha", "total_pace", "curr_pace", "male", "age"]),
+        ("M3", f"stan_results/model3/params_{race}.csv", ["alpha", "total_pace", "curr_pace", "male", "age_t"]),
     ]
     mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=full) for (name, path, feats) in model_info}
     if full:

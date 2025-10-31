@@ -21,3 +21,9 @@ model {
     finish[n] ~ normal(feats[n] * beta[ll[n]], sigma[ll[n]]);
   }
 }
+generated quantities {
+  vector[N] log_lik;
+  for (n in 1:N) {
+    log_lik[n] = normal_lpdf(finish[n] | feats[n] * beta[ll[n]], sigma[ll[n]]);
+  }
+}
