@@ -1,27 +1,35 @@
 
-n=24000: 400/400 2 ch: 792, 4609, 2978 (age_t)
-See help('pareto-k-diagnostic') for details.
+CHI n=24000: 400/400 2 ch: 749 5090 3329 (age_t) 
+       elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
+model3      0.0       0.0  24350.9    373.2       182.9     56.7 -48701.7    746.4
+model2    -33.3      12.2  24317.5    373.9       175.8     60.8 -48635.1    747.9
+model1  -3813.0     198.9  20537.8    272.0        54.2      8.6 -41075.6    544.1
+
+NYC n=24000: 400/400 2 ch: 686 4967 3823 (age_t) 
+       elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
+model3      0.0       0.0  25456.8    291.3        92.0      9.9 -50913.5    582.6
+model2    -26.5       8.2  25430.3    290.7        84.5     10.3 -50860.6    581.3
+model1  -4179.4     124.6  21277.4    253.4        46.9      5.1 -42554.7    506.7
+
+BOS n=24000: 400/400 2 ch: 792, 4609, 2978 (age_t)
        elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
 model3      0.0       0.0  26339.6    395.7       132.3     28.9 -52679.2    791.4
 model2    -72.9      13.5  26266.7    392.1       117.5     23.9 -52533.4    784.1
 model1  -5234.8     182.9  21104.8    291.4        62.1     11.9 -42209.6    582.8
 
-n=20000: 400/400 2 ch: 792, 4609, 2978 (agegroup)
-See help('pareto-k-diagnostic') for details.
+BOS n=20000: 400/400 2 ch: 792, 4609, 2978 (agegroup)
        elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
 model3      0.0       0.0  21965.3    358.0       121.6     30.4 -43930.6    716.1
 model2    -58.2      11.0  21907.1    358.1       120.7     32.7 -43814.2    716.2
 model1  -4335.5     170.5  17629.8    261.6        57.5     11.5 -35259.6    523.1
 
-n=20000: 400/400 2 ch: 671, 4356, 2965 (age_t)
-See help('pareto-k-diagnostic') for details.
+BOS n=20000: 400/400 2 ch: 671, 4356, 2965 (age_t)
        elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
 model3      0.0       0.0  21971.7    357.1       119.8     25.6 -43943.4    714.1
 model2    -64.6      11.7  21907.1    358.1       120.7     32.7 -43814.2    716.2
 model1  -4341.9     169.5  17629.8    261.6        57.5     11.5 -35259.6    523.1
 
-n=20000: 400/400 2 ch: 687, 4378, 5505 (age)
-See help('pareto-k-diagnostic') for details.
+BOS n=20000: 400/400 2 ch: 687, 4378, 5505 (age)
        elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
 model3      0.0       0.0  21923.1    357.5       154.5     28.0 -43846.2    715.0
 model2    -16.0      13.8  21907.1    358.1       120.7     32.7 -43814.2    716.2

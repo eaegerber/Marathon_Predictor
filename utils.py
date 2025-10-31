@@ -264,17 +264,21 @@ def save_param_values(race, rnd=4):
     """Save paramater values into analysis/tables"""
     param_lists = []
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    params = pd.read_csv(f"stan_results/model2/params_{race}.csv", index_col="Unnamed: 0")
+    params = pd.read_csv(f"stan_results/model3/params_{race}.csv", index_col="Unnamed: 0")
     p1 = params.describe().T["mean"]
     p2 = params.describe().T["std"]
-    param_lists.append(p1[[f"beta.{i}.1" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('alpha_mean'))
-    param_lists.append(p2[[f"beta.{i}.1" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('alpha_std'))
-    param_lists.append(p1[[f"beta.{i}.2" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('total_pace_mean'))
-    param_lists.append(p2[[f"beta.{i}.2" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('total_pace_std'))
-    param_lists.append(p1[[f"beta.{i}.3" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('curr_pace_mean'))
-    param_lists.append(p2[[f"beta.{i}.3" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('curr_pace_std'))
-    param_lists.append(p1[[f"sigma.{i}" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('sigma_mean'))
-    param_lists.append(p2[[f"sigma.{i}" for i in range(1, 9)]].round(rnd).set_axis(mks).rename('sigma_std'))
+    param_lists.append(p1[[f"beta.{i+1}.1" for i in range(8)]].round(rnd).set_axis(mks).rename('alpha_mean'))
+    param_lists.append(p2[[f"beta.{i+1}.1" for i in range(8)]].round(rnd).set_axis(mks).rename('alpha_std'))
+    param_lists.append(p1[[f"beta.{i+1}.2" for i in range(8)]].round(rnd).set_axis(mks).rename('total_pace_mean'))
+    param_lists.append(p2[[f"beta.{i+1}.2" for i in range(8)]].round(rnd).set_axis(mks).rename('total_pace_std'))
+    param_lists.append(p1[[f"beta.{i+1}.3" for i in range(8)]].round(rnd).set_axis(mks).rename('curr_pace_mean'))
+    param_lists.append(p2[[f"beta.{i+1}.3" for i in range(8)]].round(rnd).set_axis(mks).rename('curr_pace_std'))
+    param_lists.append(p1[[f"beta.{i+1}.4" for i in range(8)]].round(rnd).set_axis(mks).rename('gender_mean'))
+    param_lists.append(p2[[f"beta.{i+1}.4" for i in range(8)]].round(rnd).set_axis(mks).rename('gender_std'))
+    param_lists.append(p1[[f"beta.{i+1}.5" for i in range(8)]].round(rnd).set_axis(mks).rename('age_t_mean'))
+    param_lists.append(p2[[f"beta.{i+1}.5" for i in range(8)]].round(rnd).set_axis(mks).rename('age_t_std'))
+    param_lists.append(p1[[f"sigma.{i+1}" for i in range(8)]].round(rnd).set_axis(mks).rename('sigma_mean'))
+    param_lists.append(p2[[f"sigma.{i+1}" for i in range(8)]].round(rnd).set_axis(mks).rename('sigma_std'))
     param_df = pd.concat(param_lists, axis=1)
     param_df.to_csv(f"analysis/tables/{race}_params.csv")
     return param_df
