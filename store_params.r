@@ -13,7 +13,7 @@ features1 <- c("alpha", "total_pace")
 features2 <- c("alpha", "total_pace", "curr_pace", "male")
 features3 <- c("alpha", "total_pace", "curr_pace", "male", "age_t")
 
-for (race in c("nyc", "chi")) {
+for (race in c("bos", "nyc", "chi")) {
     print(race)
     train_name <- paste("processed_data/train_", race, ".csv", sep="")
     train_data <- read.csv(train_name)
