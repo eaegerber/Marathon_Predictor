@@ -10,7 +10,7 @@ library("rstan") # observe startup messages
 library("loo")
 
 features1 <- c("alpha", "total_pace")
-features2 <- c("alpha", "total_pace", "curr_pace", "male")
+features2 <- c("alpha", "total_pace", "curr_pace")
 features3 <- c("alpha", "total_pace", "curr_pace", "male", "age_t")
 
 for (race in c("bos", "nyc", "chi")) {
