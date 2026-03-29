@@ -98,23 +98,37 @@ def process_df(data):
     new_df['lvl'] = (new_df['dist'].str[:-1].astype(int) / 5).astype(int)
     return new_df
 
-def get_data(racename="bos", size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], save=False, seed=2025):
+def get_data(size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], save=False, seed=2025):
     """Get and process data from filepath. After processing data, this function samples the training and test data
     based on training and test data specifications for size and years. Returns train and test data"""
-    d = pd.read_csv(f"processed_data/full_data_{racename}.csv")
-    train_years, test_years =  d[d["Year"].isin(train_lis)], d[d["Year"].isin(test_lis)]
-    xtrain = process_df(train_years)
-    xtest = process_df(test_years)
-
-    if size_train != None:
-        xtrain = xtrain.sample(n=size_train, random_state=seed).sort_values("lvl")
     
-    if size_test != None:
-        xtest = xtest.sample(n=size_test, random_state=seed).sort_values("lvl")
+    train_data_list, test_data_list = [], []
+    for race in ["bos", "nyc", "chi"]:
+        d = pd.read_csv(f"processed_data/full_data_{race}.csv")
+        train_years, test_years =  d[d["Year"].isin(train_lis)], d[d["Year"].isin(test_lis)]
+        xtrain = process_df(train_years)
+        xtest = process_df(test_years)
+        xtrain["race"], xtest["race"] = race, race
+        xtrain["Race"], xtest["Race"] = race, race
 
+        if size_train != None:
+            xtrain = xtrain.sample(n=size_train, random_state=seed).sort_values("lvl")
+        
+        if size_test != None:
+            xtest = xtest.sample(n=size_test, random_state=seed).sort_values("lvl")
+
+        train_data_list.append(xtrain)
+        test_data_list.append(xtest)
+
+    xtrain = pd.concat(train_data_list)
+    xtest = pd.concat(test_data_list)
+
+    xtrain = pd.get_dummies(xtrain, columns=['race'], dtype=int)
+    xtest = pd.get_dummies(xtest, columns=['race'], dtype=int)
+    
     if save:
-        xtrain.to_csv(f"processed_data/train_{racename}.csv")
-        xtest.to_csv(f"processed_data/test_{racename}.csv")
+        xtrain.to_csv("processed_data/train_full.csv")
+        xtest.to_csv("processed_data/test_full.csv")
     return xtrain, xtest
 
 def save_data(race_list, size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], seed=2025):
@@ -146,14 +160,31 @@ def get_preds(test_data, stan_data, feats_lis, name="stan_pred", propleft=False,
         return preds
     
 
-def _get_lvl_params(stan_data, lvl, num_feats):
-    betas = stan_data[[f"beta.{lvl}.{num+1}" for num in range(num_feats)]].T.values
+def _get_lvl_race_params(stan_data, lvl, race, num_feats):
+    # print(race, lvl) 
+    if race == "nyc":
+        col_nums = list(range(num_feats + 1))
+    elif race == "chi":
+        col_nums = list(range(num_feats)) + [num_feats + 1]
+    else: # race == "bos"
+        col_nums = list(range(num_feats))
+
+    betas = stan_data[[f"beta.{lvl}.{num+1}" for num in col_nums]].T.values
     sigma = stan_data[f"sigma.{lvl}"].values
     return betas, sigma
 
 def _preds(x, feats, params, full=True):
-    betas, sigma = _get_lvl_params(params, x["lvl"].iloc[0], len(feats))
-    xfeats = x[feats].values
+    race_name = x["Race"].iloc[0]
+    betas, sigma = _get_lvl_race_params(params, x["lvl"].iloc[0], race_name, len(feats))
+
+    if race_name == "nyc":
+        feats_lis = feats + ["race_nyc"]
+    elif race_name == "chi":
+        feats_lis = feats + ["race_chi"]
+    else: # race_name == "bos"
+        feats_lis = feats
+
+    xfeats = x[feats_lis].values
     pred_means = xfeats.dot(betas)
     if full:
         preds = np.random.normal(pred_means, sigma)
@@ -164,7 +195,7 @@ def _preds(x, feats, params, full=True):
     
 def get_predictions(test_data, stan_path, feats_lis, full=False):
     stan_data = pd.read_csv(stan_path)
-    group = test_data.groupby("lvl", group_keys=False)
+    group = test_data.groupby(["lvl", "Race"], group_keys=True)
     result = group.apply(lambda x: _preds(x, feats_lis, stan_data, full))
     return np.concatenate(list(result))
 

@@ -9,11 +9,11 @@ set.seed(2025)
 library("rstan") # observe startup messages
 library("loo")
 
-features1 <- c("alpha", "total_pace")
-features2 <- c("alpha", "total_pace", "curr_pace")
-features3 <- c("alpha", "total_pace", "curr_pace", "male", "age_t")
+features1 <- c("alpha", "total_pace", "race_nyc", "race_chi")
+features2 <- c("alpha", "total_pace", "curr_pace", "race_nyc", "race_chi")
+features3 <- c("alpha", "total_pace", "curr_pace", "male", "age_t", "race_nyc", "race_chi")
 
-for (race in c("bos", "nyc", "chi")) {
+for (race in c("full")) {
     print(race)
     train_name <- paste("processed_data/train_", race, ".csv", sep="")
     train_data <- read.csv(train_name)
@@ -24,7 +24,7 @@ for (race in c("bos", "nyc", "chi")) {
     res_name1 <- paste("stan_results/model1/result_", race, ".csv", sep="")
     par_name1 <- paste("stan_results/model1/params_", race, ".csv", sep="")
     fit1 <- stan(file = 'marathon.stan', data = data1,
-                 iter=800, chains=2, cores=2, seed=2025,
+                 iter=800, chains=4, cores=4, seed=2025,
                  control = list(max_treedepth = 12))
     parameters1 <- as.data.frame(extract(fit1)[c("beta", "sigma", "lp__")])
     write.csv(parameters1, par_name1, row.names = TRUE)
@@ -39,7 +39,7 @@ for (race in c("bos", "nyc", "chi")) {
     res_name2 <- paste("stan_results/model2/result_", race, ".csv", sep="")
     par_name2 <- paste("stan_results/model2/params_", race, ".csv", sep="")
     fit2 <- stan(file = 'marathon.stan', data = data2,
-                 iter=800, chains=2, cores=2, seed=2025,
+                 iter=800, chains=4, cores=4, seed=2025,
                  control = list(max_treedepth = 12))
     parameters2 <- as.data.frame(extract(fit2)[c("beta", "sigma", "lp__")])
     write.csv(parameters2, par_name2, row.names = TRUE)
@@ -54,7 +54,7 @@ for (race in c("bos", "nyc", "chi")) {
     res_name3 <- paste("stan_results/model3/result_", race, ".csv", sep="")
     par_name3 <- paste("stan_results/model3/params_", race, ".csv", sep="")
     fit3 <- stan(file = 'marathon.stan', data = data3,
-                 iter=800, chains=2, cores=2, seed=2025,
+                 iter=800, chains=4, cores=4, seed=2025,
                  control = list(max_treedepth = 12))
     parameters3 <- as.data.frame(extract(fit3)[c("beta", "sigma", "lp__")])
     write.csv(parameters3, par_name3, row.names = TRUE)
