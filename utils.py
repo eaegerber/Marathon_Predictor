@@ -160,7 +160,7 @@ def get_preds(test_data, stan_data, feats_lis, name="stan_pred", propleft=False,
         return preds
     
 
-def _get_lvl_race_params(stan_data, lvl, race, num_feats):
+def _get_lvl_race_params(stan_data, lvl, race, num_feats, curr_pace=False):
     # print(race, lvl) 
     if race == "nyc":
         col_nums = list(range(num_feats + 1))
@@ -169,20 +169,31 @@ def _get_lvl_race_params(stan_data, lvl, race, num_feats):
     else: # race == "bos"
         col_nums = list(range(num_feats))
 
-    betas = stan_data[[f"beta.{lvl}.{num+1}" for num in col_nums]].T.values
+    beta_cols = [f"beta.{lvl}.{num+1}" for num in col_nums]
+    if (curr_pace) and (lvl != 1):
+        beta_cols += [f"chi.{lvl-1}"]
+    
+    betas = stan_data[beta_cols].T.values
     sigma = stan_data[f"sigma.{lvl}"].values
     return betas, sigma
 
-def _preds(x, feats, params, full=True):
+def _preds(x, feats, params, full=True, curr_pace=False):
     race_name = x["Race"].iloc[0]
-    betas, sigma = _get_lvl_race_params(params, x["lvl"].iloc[0], race_name, len(feats))
-
+    race_lvl = x["lvl"].iloc[0]
+    
+    betas, sigma = _get_lvl_race_params(params, race_lvl, race_name, len(feats), curr_pace=curr_pace)
+    
     if race_name == "nyc":
-        feats_lis = feats + ["race_nyc"]
+        feats_ls = feats + ["race_nyc"]
     elif race_name == "chi":
-        feats_lis = feats + ["race_chi"]
+        feats_ls = feats + ["race_chi"]
     else: # race_name == "bos"
-        feats_lis = feats
+        feats_ls = feats
+
+    if (curr_pace) and (race_lvl != 1):
+        feats_lis = feats_ls + ["curr_pace"]
+    else:
+        feats_lis = feats_ls
 
     xfeats = x[feats_lis].values
     pred_means = xfeats.dot(betas)
@@ -193,10 +204,10 @@ def _preds(x, feats, params, full=True):
         preds = pred_means.mean(axis=1)
         return preds
     
-def get_predictions(test_data, stan_path, feats_lis, full=False):
+def get_predictions(test_data, stan_path, feats_lis, full=False, curr_pace=False):
     stan_data = pd.read_csv(stan_path)
     group = test_data.groupby(["lvl", "Race"], group_keys=True)
-    result = group.apply(lambda x: _preds(x, feats_lis, stan_data, full))
+    result = group.apply(lambda x: _preds(x, feats_lis, stan_data, full, curr_pace))
     return np.concatenate(list(result))
 
 def other_stats(data, finish, rnd=3):
@@ -316,11 +327,13 @@ def save_param_values(race, rnd=4):
 
 def get_test_preds(test_data, race: str, baseline = "BL", full=False):
     model_info = [
-        ("M1", f"stan_results/model1/params_{race}.csv", ["alpha", "total_pace"]),
-        ("M2", f"stan_results/model2/params_{race}.csv", ["alpha", "total_pace", "curr_pace"]),
-        ("M3", f"stan_results/model3/params_{race}.csv", ["alpha", "total_pace", "curr_pace", "male", "age_t"]),
+        ("M1", f"stan_results/params_{race}1.csv", ["alpha", "total_pace"], False),
+        ("M2", f"stan_results/params_{race}2.csv", ["alpha", "total_pace", "male", "age_t"], False),
+        ("M3", f"stan_results/params_{race}3.csv", ["alpha", "total_pace"], True),
+        ("M4", f"stan_results/params_{race}4.csv", ["alpha", "total_pace", "male", "age_t"], True),
+        ("M5", f"stan_results/params_{race}5.csv", ["alpha", "total_pace", "curr_pace", "male", "age_t"], False),
     ]
-    mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=full) for (name, path, feats) in model_info}
+    mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=full, curr_pace=cp) for (name, path, feats, cp) in model_info}
     if full:
         mpreds2 = {k: (42195 / 60) / v for k, v in mpreds.items()}
         return mpreds2

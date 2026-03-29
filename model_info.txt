@@ -1,18 +1,17 @@
-
-BOS n=20000: 400/400 2 ch: 676 4836 2942
+full: n=5000*3: 400/400 - 4 chains: 574, 888, 1561, 2874, 3224
        elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
-model3      0.0       0.0  21971.7    357.1       119.8     25.6 -43943.4    714.1
-model2   -180.5      18.6  21791.3    354.6       104.7     24.2 -43582.5    709.1
-model1  -4341.9     169.5  17629.8    261.6        57.5     11.5 -35259.6    523.1
+model5      0.0       0.0  16127.2    259.5       148.5     26.0 -32254.3    519.0
+model4     -0.9       1.9  16126.3    259.9       153.0     28.4 -32252.6    519.7
+model3   -184.7      19.2  15942.5    260.6       129.0     24.4 -31884.9    521.3
+model2  -2289.7     155.5  13837.5    199.0        76.7      5.9 -27674.9    398.0
+model1  -2567.3     156.2  13559.9    197.1        61.9      5.2 -27119.8    394.2
 
-NYC n=20000: 400/400 2 ch: 903 4694 3075
-       elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
-model3      0.0       0.0  21189.5    272.2        93.9     12.0 -42379.0    544.5
-model2   -259.9      21.9  20929.6    269.7        77.5     10.8 -41859.2    539.4
-model1  -3512.5     112.9  17677.0    235.5        50.5      6.1 -35354.1    471.1
+All are single combined model with features for each marathon (beta += ["race_nyc", "race_chi"])
+*beta: feature matrix of len 8 (5K, 10K, .., 40K)
+*chi: feature matrix of len 7 (10K, 15K, .., 40K)
 
-CHI n=20000: 400/400 2 ch: 752 3857 4431
-       elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
-model3      0.0       0.0  20518.5    324.2       142.4     25.8 -41037.0    648.3
-model2   -269.8      24.3  20248.7    320.7       121.4     23.9 -40497.4    641.5
-model1  -3409.1     167.5  17109.4    250.7        53.7      9.5 -34218.8    501.5
+1: beta = ["alpha", "total_pace"]
+2: beta = ["alpha", "total_pace", "male", "age_t"]
+3: beta = ["alpha", "total_pace"]; chi = ["curr_pace"]
+4: beta = ["alpha", "total_pace", "male", "age_t"]; chi = ["curr_pace"]
+5: beta = ["alpha", "total_pace", "curr_pace", "male", "age_t"]
