@@ -282,24 +282,36 @@ def get_race_info():
     pd.DataFrame(arrs).to_csv("analysis/tables/race_info.csv")
     return big_df
 
-def all_tests(data, test_list, savename):
+def all_tests(data, models_list, savename, tests_list=["KS", "CVM", "AD", "Wilcoxon"]):
+    """Test all unique pairs of models using comparison tests."""
+    model_pairs = []
+    for i in range(len(models_list)):
+        for j in range(i + 1, len(models_list)):
+            model_pairs.append([models_list[i], models_list[j]])
+
     tbl = []
-    for lbl1, lbl2 in test_list:
+    for lbl1, lbl2 in model_pairs:
         row = []
         arr1, arr2 = data[lbl1], data[lbl2]
-        value = stats.ks_2samp(arr1, arr2).pvalue
-        row.append(value)
-        value = stats.wilcoxon(arr1, arr2).pvalue
-        row.append(value)
-        value = stats.cramervonmises_2samp(arr1, arr2).pvalue
-        row.append(value)
-        value = stats.anderson_ksamp([arr1, arr2]).pvalue
-        row.append(value)
+        if "KS" in tests_list:
+            value = stats.ks_2samp(arr1, arr2).pvalue
+            row.append(value)
+        if "CVM" in tests_list:
+            value = stats.cramervonmises_2samp(arr1, arr2).pvalue
+            row.append(value)
+        if "AD" in tests_list:
+            value = stats.anderson_ksamp([arr1, arr2]).pvalue
+            row.append(value)
+        if "Wilcoxon" in tests_list:
+            value = stats.wilcoxon(arr1, arr2).pvalue
+            row.append(value)
         tbl.append(row)
 
-    idx = [f"{lbl1}-{lbl2}" for lbl1, lbl2 in test_list]
-    df = pd.DataFrame(tbl, index=idx, columns=["KS", "Wilcoxon", "CVM", "AD"]).round(4).replace(0.0000, "<0.0001")
-    df.to_csv(savename)
+    idx = [f"{lbl1}-{lbl2}" for lbl1, lbl2 in model_pairs]
+    df = pd.DataFrame(tbl, index=idx, columns=tests_list).round(4).replace(0.0000, "<0.0001")
+    filename = f"analysis/tables/{savename}_stattest.csv"
+    df.to_csv(filename)
+    print(f"File saved: {filename}")
     return df
 
 def save_param_values(race, rnd=4):
@@ -327,11 +339,11 @@ def save_param_values(race, rnd=4):
 
 def get_test_preds(test_data, race: str, baseline = "BL", full=False):
     model_info = [
-        ("M1", f"stan_results/params_{race}1.csv", ["alpha", "total_pace"], False),
-        ("M2", f"stan_results/params_{race}2.csv", ["alpha", "total_pace", "male", "age_t"], False),
-        ("M3", f"stan_results/params_{race}3.csv", ["alpha", "total_pace"], True),
-        ("M4", f"stan_results/params_{race}4.csv", ["alpha", "total_pace", "male", "age_t"], True),
-        ("M5", f"stan_results/params_{race}5.csv", ["alpha", "total_pace", "curr_pace", "male", "age_t"], False),
+        ("S1", f"stan_results/params_{race}1.csv", ["alpha", "total_pace"], False),
+        ("S2", f"stan_results/params_{race}2.csv", ["alpha", "total_pace", "male", "age_t"], False),
+        ("S3", f"stan_results/params_{race}3.csv", ["alpha", "total_pace"], True),
+        ("S4", f"stan_results/params_{race}4.csv", ["alpha", "total_pace", "male", "age_t"], True),
+        ("S5", f"stan_results/params_{race}5.csv", ["alpha", "total_pace", "curr_pace", "male", "age_t"], False),
     ]
     mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=full, curr_pace=cp) for (name, path, feats, cp) in model_info}
     if full:

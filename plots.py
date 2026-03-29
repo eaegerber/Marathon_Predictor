@@ -8,7 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 from matplotlib.lines import Line2D
-from utils import get_data, binning, int_to_str_time, error_table, group_data, other_stats, get_test_preds #, Union
+from utils import get_data, binning, int_to_str_time, error_table, group_data, other_stats, all_tests, get_test_preds, add_intervals_to_test
 random.seed(2025)
 
 def get_plot_race_dists(races=["bos", "nyc", "chi"]):
@@ -313,6 +313,35 @@ def plots_for_race(test_pred_data, race, models, baseline, comp_model):
     a = plot_finish_groups(test_pred_data, model=comp_model, baseline=baseline, save_name=race)
     plot_finish_age_gender(test_pred_data, model=comp_model, baseline=baseline, save_name=race, grouping="age", bins=[0, 30, 40, 50])
     return tbl
+
+def tests_and_plots(test_data_full, races_list, models, baseline, comp_model, tests_list=["KS", "CVM", "AD", "Wilcoxon"]):
+    tables = {}
+    for race in races_list:
+        if race != "all":
+            test_df = test_data_full[test_data_full["Race"] == race]
+        else:
+            test_df = test_data_full
+        
+        tests_tbl = all_tests(data=test_df, models_list=models, savename=race, tests_list=tests_list)
+        error_tbl = plots_for_race(test_pred_data=test_df, race=race, models=models, baseline=baseline, comp_model=comp_model)
+        tables[race] = (tests_tbl, error_tbl)
+
+    return tables
+
+def tests_and_plots_full(test_data_full, races_list, models, baseline, comp_model, tests_list=["KS", "CVM", "AD", "Wilcoxon"]):
+    tables = {}
+    for race in races_list:
+        if race != "all":
+            test_df = test_data_full[test_data_full["Race"] == race]
+        else:
+            test_df = test_data_full
+        
+        preds2 = get_test_preds(test_df, "all", baseline=baseline, full=True)
+        intervals_tbl = add_intervals_to_test(test_df, preds2, models)
+        i_check, i_sizes = plot_interval_checks(intervals_tbl, models, save_name=race)
+        tables[race] = (i_check, i_sizes)
+
+    return tables
 
 if __name__ == "__main__":
     print('start')
