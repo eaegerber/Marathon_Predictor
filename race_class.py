@@ -4,10 +4,11 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, get_predictions
+from utils import str_to_int_time, int_to_str_time, time_to_pace, conv1, last_map, get_predictions
 
+np.random.seed(2024)
 marks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-stan_dict = {loc: f"stan_results/model2/params_{loc}.csv" for loc in ["bos", "nyc", "chi"]}
+stan_path = "stan_results/params_all3.csv"
 
 class RaceSplits():
 
@@ -25,6 +26,11 @@ class RaceSplits():
     def add_pace(self, dist: str, time: str, split=False):
         assert dist in marks
         num_time = str_to_int_time(time)
+        if (split) and (dist != "5K"):
+            assert self.last_dist[dist] in self.stored_times.keys(), "error here"
+            last_time = self.stored_times[self.last_dist[dist]]
+            num_time += last_time
+                
         self.stored_times[dist] = num_time
         self.load_paces()
 
@@ -57,17 +63,15 @@ class RaceSplits():
         info = info[info["dist"].isin(show)]
         info['alpha'] = 1
         info['lvl'] = (info['dist'].str[:-1].astype(int) / 5).astype(int)
-        feats_lis = ["alpha", "total_pace", "curr_pace"]
-        preds = (42195 / 60) / get_predictions(info, stan_dict[self.city], feats_lis=feats_lis, full=True)
+        feats_lis = ["alpha", "total_pace"]
+        info['race'] = self.city
+        info['Race'] = self.city
+        info = pd.get_dummies(info, columns=["race"], dtype=int)
+        preds = (42195 / 60) / get_predictions(info, stan_path, feats_lis=feats_lis, full=True, curr_pace=True)
         return preds
     
     def stored_dists(self):
         return list(self.stored_times.keys())
-    
-    def stored_times_table(self):
-        mlis = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-        df = pd.DataFrame([(k, int_to_str_time(60 * v)) for k, v in self.stored_times.items()], columns=["dist", "time"])
-        return df
     
     def reset_race(self):
         # self.__init__()
@@ -79,7 +83,7 @@ class RaceSplits():
 
 def table_info(info: pd.DataFrame, show = ["5K", "10K"]):
     percentiles = np.percentile(info, [2.5, 10, 25, 50, 75, 90, 97.5], axis=1)
-    percentile_names = ["lower95", "lower80", "lower50", "mean", "upper50", "upper80", "upper95"]
+    percentile_names = ["lower95", "lower80", "lower50", "median", "upper50", "upper80", "upper95"]
     table = pd.DataFrame(percentiles, index=percentile_names, columns=show)
     for col in table:
         table[col] = table[col].apply(lambda x: int_to_str_time(60 * x, no_secs=True))
@@ -105,9 +109,14 @@ def get_from_info(
     colors = plt.get_cmap()(np.linspace(0.2, 0.8, len(shows)))
     for i, dist in enumerate(shows):
         info = percentile_info[dist]
-        info_strings = (dist, f'{info["mean"]}', f'{info["lower50"]}-{info["upper50"]}', f'{info["lower80"]}-{info["upper80"]}', f'{info["lower95"]}-{info["upper95"]}')
+        # print('info', race.stored_times[dist], int_to_str_time(race.stored_times[dist]))
+        input_time = int_to_str_time(race.stored_times[dist])
+        range50 = f'{info["lower50"]}-{info["upper50"]}'
+        range80 = f'{info["lower80"]}-{info["upper80"]}'
+        range95 = f'{info["lower95"]}-{info["upper95"]}'
+        info_strings = (dist, input_time, f'{info["median"]}', range50, range80, range95)
         table.append(info_strings)
-        sns.kdeplot(p_array[i], color=colors[i], label=dist, linewidth=2, alpha=0.9)
+        sns.kdeplot(p_array[i], color=colors[i], label=dist, linewidth=2, alpha=0.9, bw_adjust=1.5)
 
 
     x_labels = plt.xticks()[0]
@@ -119,12 +128,14 @@ def get_from_info(
     plt.ylabel("Probability")#, fontsize=18)
     plt.title(f"{name} Live Prediction")#, fontsize=20)
     if actual:
-        plt.vlines(actual, 0, plt.yticks()[0].max(), linestyles="dashed", color="black", label="actual")
+        plt.vlines(actual / 60, 0, plt.yticks()[0].max(), linestyles="dashed", color="black", label="actual")
 
     plt.legend()#fontsize=16)
     plt.savefig("analysis/plots/plot_live.jpg", dpi=300)
     print('done')
-    return fig, pd.DataFrame(table, columns=["dist", "median", "range_50", "range_80", "range_95"])
+
+    table_df = pd.DataFrame(table, columns=["Split", "Input Time", "Median", "50% CI", "80% CI", "95% CI"])
+    return fig, table_df
 
 
 def get_race_for_person(num, train_data,) -> RaceSplits:
@@ -138,7 +149,7 @@ def get_race_for_person(num, train_data,) -> RaceSplits:
         person_race.add_pace(m, t)
 
     person_race.load_paces()
-    actual = person["Finish Net"] / 60
+    actual = person["Finish Net"]
     return person_race, actual
 
 
@@ -165,7 +176,7 @@ if __name__ == "__main__":
     print('curr_dist', rs.stored_dists())
     rs.add_pace("5K", "15:45")
 
-#     # print('paces', rs.get_paces())
+    # print('paces', rs.get_paces())
     print('curr_dist', rs.stored_dists())
     rs.add_pace("10K", "32:12")
     rs.add_pace("15K", "49:57")
@@ -175,7 +186,7 @@ if __name__ == "__main__":
     print('s', rs.get_stored_paces())
 
     print(rs.stored_times)
-    print(rs.stored_times_table())
+    # print(rs.stored_times_table())
 
     # nucr_filename = "processed_data/nucr_runners.csv"
     # nucr = pd.read_csv(nucr_filename)
