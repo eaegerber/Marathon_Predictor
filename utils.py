@@ -53,6 +53,13 @@ conv1 = {
     "35K": 35_000, "40K": 40_000, "Finish Net": 42_195,
 }
 
+marathon_map = {
+    "bos": "Boston Marathon", 
+    "nyc": "New York Marathon", 
+    "chi": "Chicago Marathon", 
+    "all": "All Marathons"
+}
+
 def time_to_pace(time, dist):
     """Convert time to pace"""
     secs = time * 60
@@ -127,8 +134,8 @@ def get_data(size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], sav
     xtest = pd.get_dummies(xtest, columns=['race'], dtype=int)
     
     if save:
-        xtrain.to_csv("processed_data/train_full.csv")
-        xtest.to_csv("processed_data/test_full.csv")
+        xtrain.to_csv("processed_data/train_all.csv")
+        xtest.to_csv("processed_data/test_all.csv")
     return xtrain, xtest
 
 def save_data(race_list, size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], seed=2025):
@@ -171,7 +178,7 @@ def _get_lvl_race_params(stan_data, lvl, race, num_feats, curr_pace=False):
 
     beta_cols = [f"beta.{lvl}.{num+1}" for num in col_nums]
     if (curr_pace) and (lvl != 1):
-        beta_cols += [f"chi.{lvl-1}"]
+        beta_cols += [f"gamma.{lvl-1}"]
     
     betas = stan_data[beta_cols].T.values
     sigma = stan_data[f"sigma.{lvl}"].values
@@ -324,7 +331,7 @@ def save_param_values(savename="params3", rnd=4):
         ("total_pace", [f"beta.{i+1}.2" for i in range(8)]),
         ("race_nyc", [f"beta.{i+1}.3" for i in range(8)]),
         ("race_chi", [f"beta.{i+1}.4" for i in range(8)]),
-        ("curr_pace", [f"chi.{i+1}" for i in range(7)]),
+        ("curr_pace", [f"gamma.{i+1}" for i in range(7)]),
         ("sigma", [f"sigma.{i+1}" for i in range(8)]),
     ]
 
@@ -345,7 +352,6 @@ def get_test_preds(test_data, race: str, baseline = "BL", full=False):
         ("S2", f"stan_results/params_{race}2.csv", ["alpha", "total_pace", "male", "age_t"], False),
         ("S3", f"stan_results/params_{race}3.csv", ["alpha", "total_pace"], True),
         ("S4", f"stan_results/params_{race}4.csv", ["alpha", "total_pace", "male", "age_t"], True),
-        ("S5", f"stan_results/params_{race}5.csv", ["alpha", "total_pace", "curr_pace", "male", "age_t"], False),
     ]
     mpreds = {name: get_predictions(test_data, path, feats_lis=feats, full=full, curr_pace=cp) for (name, path, feats, cp) in model_info}
     if full:

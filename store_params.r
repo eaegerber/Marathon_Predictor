@@ -59,7 +59,7 @@ for (race in c("all")) {
     fit3 <- stan(file = 'marathon2.stan', data = data3,
                  iter=800, chains=4, cores=4, seed=2025,
                  control = list(max_treedepth = 12))
-    parameters3 <- as.data.frame(extract(fit3)[c("beta", "sigma", "lp__")])
+    parameters3 <- as.data.frame(extract(fit3)[c("beta", "gamma", "sigma", "lp__")])
     write.csv(parameters3, par_name3, row.names = TRUE)
     check_hmc_diagnostics(fit3)
     llk3 <- extract_log_lik(fit3, parameter_name = "log_lik", merge_chains = TRUE)
@@ -75,30 +75,14 @@ for (race in c("all")) {
     fit4 <- stan(file = 'marathon2.stan', data = data4,
                  iter=800, chains=4, cores=4, seed=2025,
                  control = list(max_treedepth = 12))
-    parameters4 <- as.data.frame(extract(fit4)[c("beta", "sigma", "lp__")])
+    parameters4 <- as.data.frame(extract(fit4)[c("beta", "gamma", "sigma", "lp__")])
     write.csv(parameters4, par_name4, row.names = TRUE)
     check_hmc_diagnostics(fit4)
     llk4 <- extract_log_lik(fit4, parameter_name = "log_lik", merge_chains = TRUE)
     loo4 <- loo(llk4)
     print(loo4)
-
-    data5 <- list(N = nrow(train_data), K = length(features5), L = 8,
-                  feats = train_data[features5], ll = train_data$lvl,
-                  curr = train_data$curr_pace,
-                  finish = train_data$finish)
-    res_name5 <- paste("stan_results/result_", race, "5.csv", sep="")
-    par_name5 <- paste("stan_results/params_", race, "5.csv", sep="")
-    fit5 <- stan(file = 'marathon.stan', data = data5,
-                 iter=800, chains=4, cores=4, seed=2025,
-                 control = list(max_treedepth = 12))
-    parameters5 <- as.data.frame(extract(fit5)[c("beta", "sigma", "lp__")])
-    write.csv(parameters5, par_name5, row.names = TRUE)
-    check_hmc_diagnostics(fit5)
-    llk5 <- extract_log_lik(fit5, parameter_name = "log_lik", merge_chains = TRUE)
-    loo5 <- loo(llk5)
-    print(loo5)
     
-    comp <- loo_compare(loo1, loo2, loo3, loo4, loo5)
+    comp <- loo_compare(loo1, loo2, loo3, loo4)
     print(comp, simplify=FALSE)
     # stan_rhat(fit3)
     # traceplot(fit3, inc_warmup=TRUE)

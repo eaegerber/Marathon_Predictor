@@ -8,7 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 from matplotlib.lines import Line2D
-from utils import get_data, binning, int_to_str_time, error_table, group_data, other_stats, all_tests, get_test_preds, add_intervals_to_test
+from utils import get_data, binning, int_to_str_time, error_table, group_data, other_stats, all_tests, get_test_preds, add_intervals_to_test, marathon_map
 random.seed(2025)
 
 def get_plot_race_dists(races=["bos", "nyc", "chi"]):
@@ -83,7 +83,7 @@ def get_plot_race_subgroup(race="bos"):
         ax[i].set_xlim(ticks[1] - 15, ticks[-2] - 45)
         ax[i].set_xlabel(f"Time (HH:MM)", fontsize=20)
         ax[i].set_yticks(yticks, labels=yticks, fontsize=18)
-        ax[i].set_title(f"Distribution by {group}", fontsize=22)
+        ax[i].set_title(f"Distribution by {group} - {marathon_map.get(race, race)}", fontsize=22)
         ax[i].legend(fontsize=18)
 
     plt.savefig(f"analysis/plots/plot_dist_{race}_both.jpg", dpi=300)
@@ -150,7 +150,7 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
     plt.yticks(fontsize=12)
     plt.xlabel("Distance Into Race (km)", fontsize=15)
     plt.ylabel("Prediction Error (MAE), in minutes", fontsize=15)
-    plt.title("Average Error For Each Model", fontsize=18)
+    plt.title(f"Average Error For Each Model - {marathon_map.get(save_name, save_name)}", fontsize=18)
     plt.legend(fontsize=15)
     plt.grid(True)
     if save_name != "":
@@ -199,7 +199,7 @@ def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True
     plt.yticks(range(0, int(table_group.max(axis=None) + 5), 5), fontsize=16)
     plt.xlabel("Distance Into Race (km)", fontsize=18)
     plt.ylabel("Prediction Error (MAE), in minutes", fontsize=18)
-    plt.title("Average Error By Finish Groups", fontsize=22)
+    plt.title(f"Average Error By Finish Groups - {marathon_map.get(save_name, save_name)}", fontsize=22)
     filename = f"analysis/plots/{save_name}_error_groups.jpg"
     plt.savefig(filename, bbox_inches="tight", dpi=300)
     print(f"File saved: {filename}")
@@ -342,6 +342,16 @@ def tests_and_plots_full(test_data_full, races_list, models, baseline, comp_mode
         tables[race] = (i_check, i_sizes)
 
     return tables
+
+def plot_params(param_table_name):
+    params_tbl = pd.read_csv(f"analysis/tables/{param_table_name}.csv")
+    for col in params_tbl.columns:
+      if 'mean' in col:
+        plt.plot(params_tbl[col], label=col)
+        
+    plt.legend()
+    plt.show()
+    return
 
 if __name__ == "__main__":
     print('start')
