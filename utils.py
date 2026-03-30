@@ -314,27 +314,29 @@ def all_tests(data, models_list, savename, tests_list=["KS", "CVM", "AD", "Wilco
     print(f"File saved: {filename}")
     return df
 
-def save_param_values(race, rnd=4):
-    """Save paramater values into analysis/tables"""
-    param_lists = []
+def save_param_values(savename="params3", rnd=4):
+    """Save paramater values into analysis/tables/{savename}.csv"""
+    params = pd.read_csv(f"stan_results/params_all3.csv", index_col="Unnamed: 0")
     mks = ["5K", "10K", "15K", "20K", "25K", "30K", "35K", "40K"]
-    params = pd.read_csv(f"stan_results/model3/params_{race}.csv", index_col="Unnamed: 0")
-    p1 = params.describe().T["mean"]
-    p2 = params.describe().T["std"]
-    param_lists.append(p1[[f"beta.{i+1}.1" for i in range(8)]].round(rnd).set_axis(mks).rename('alpha_mean'))
-    param_lists.append(p2[[f"beta.{i+1}.1" for i in range(8)]].round(rnd).set_axis(mks).rename('alpha_std'))
-    param_lists.append(p1[[f"beta.{i+1}.2" for i in range(8)]].round(rnd).set_axis(mks).rename('total_pace_mean'))
-    param_lists.append(p2[[f"beta.{i+1}.2" for i in range(8)]].round(rnd).set_axis(mks).rename('total_pace_std'))
-    param_lists.append(p1[[f"beta.{i+1}.3" for i in range(8)]].round(rnd).set_axis(mks).rename('curr_pace_mean'))
-    param_lists.append(p2[[f"beta.{i+1}.3" for i in range(8)]].round(rnd).set_axis(mks).rename('curr_pace_std'))
-    param_lists.append(p1[[f"beta.{i+1}.4" for i in range(8)]].round(rnd).set_axis(mks).rename('gender_mean'))
-    param_lists.append(p2[[f"beta.{i+1}.4" for i in range(8)]].round(rnd).set_axis(mks).rename('gender_std'))
-    param_lists.append(p1[[f"beta.{i+1}.5" for i in range(8)]].round(rnd).set_axis(mks).rename('age_t_mean'))
-    param_lists.append(p2[[f"beta.{i+1}.5" for i in range(8)]].round(rnd).set_axis(mks).rename('age_t_std'))
-    param_lists.append(p1[[f"sigma.{i+1}" for i in range(8)]].round(rnd).set_axis(mks).rename('sigma_mean'))
-    param_lists.append(p2[[f"sigma.{i+1}" for i in range(8)]].round(rnd).set_axis(mks).rename('sigma_std'))
-    param_df = pd.concat(param_lists, axis=1)
-    param_df.to_csv(f"analysis/tables/{race}_params.csv")
+
+    feats_map = [
+        ("alpha", [f"beta.{i+1}.1" for i in range(8)]),
+        ("total_pace", [f"beta.{i+1}.2" for i in range(8)]),
+        ("race_nyc", [f"beta.{i+1}.3" for i in range(8)]),
+        ("race_chi", [f"beta.{i+1}.4" for i in range(8)]),
+        ("curr_pace", [f"chi.{i+1}" for i in range(7)]),
+        ("sigma", [f"sigma.{i+1}" for i in range(8)]),
+    ]
+
+    plis = []
+    for name, cols in feats_map:
+        if name == "curr_pace":
+            plis.append(params[cols].agg(["mean", "std"]).T.round(rnd).set_axis(mks[1:]).rename(columns={"mean": f"{name}_mean", "std": f"{name}_std"}))
+        else:   
+            plis.append(params[cols].agg(["mean", "std"]).T.round(rnd).set_axis(mks).rename(columns={"mean": f"{name}_mean", "std": f"{name}_std"}))
+
+    param_df = pd.concat(plis, axis=1)
+    param_df.to_csv(f"analysis/tables/{savename}.csv")
     return param_df
 
 def get_test_preds(test_data, race: str, baseline = "BL", full=False):
