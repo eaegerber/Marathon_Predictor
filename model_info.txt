@@ -1,15 +1,15 @@
-full: n=10000 (for each marathon): 400/400 - 4 chains: 1521, 1394, 4716, 6266
+full: n=30000 (10000 for each marathon): 400/400 - 4 chains: 1521, 1394, 4716, 6266
        elpd_diff se_diff  elpd_loo se_elpd_loo p_loo    se_p_loo looic    se_looic
 model4      0.0       0.0  31879.2    361.8       141.4     18.6 -63758.4    723.6
 model3   -349.7      25.4  31529.5    361.5       127.6     18.0 -63058.9    723.1
 model2  -4963.9     197.0  26915.3    290.1        80.7      5.5 -53830.6    580.3
 model1  -5489.5     198.7  26389.7    287.0        67.3      5.6 -52779.3    574.1
 
-All are single combined model with features for each marathon (beta += ["race_nyc", "race_chi"])
+Each of these are a single combined model with features for each marathon (["race_nyc", "race_chi"])
 beta: feature matrix of len 8 (5K, 10K, .., 40K)
-gamma: feature matrix of len 7 (10K, 15K, .., 40K)
+gamma: feature array of len 7 (10K, 15K, .., 40K)
 
-1: beta = ["alpha", "total_pace"]
-2: beta = ["alpha", "total_pace", "male", "age_t"]
-3: beta = ["alpha", "total_pace"]; gamma = ["curr_pace"]
-4: beta = ["alpha", "total_pace", "male", "age_t"]; gamma = ["curr_pace"]
+S1: beta = ["alpha", "total_pace", "race_nyc", "race_chi"]
+S2: beta = ["alpha", "total_pace", "race_nyc", "race_chi", "male", "age_t"]
+S3: beta = ["alpha", "total_pace", "race_nyc", "race_chi"]; gamma = ["curr_pace"]
+S4: beta = ["alpha", "total_pace", "race_nyc", "race_chi", "male", "age_t"]; gamma = ["curr_pace"]
