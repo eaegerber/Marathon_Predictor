@@ -134,14 +134,13 @@ def get_data(size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], sav
     xtest = pd.get_dummies(xtest, columns=['race'], dtype=int)
     
     if save:
-        xtrain.to_csv("processed_data/train_all.csv")
-        xtest.to_csv("processed_data/test_all.csv")
-    return xtrain, xtest
+        train_path, test_path = "processed_data/train_all.csv", "processed_data/test_all.csv"
+        xtrain.to_csv(train_path)
+        print(f"File saved: {train_path} ({xtrain.shape[0]} rows)")
+        xtest.to_csv(test_path)
+        print(f"File saved: {test_path} ({xtest.shape[0]} rows)")
 
-def save_data(race_list, size_train=50, size_test=50, train_lis=[2022], test_lis=[2023], seed=2025):
-    for race in race_list:
-        get_data(racename=race, size_train=size_train, size_test=size_test, train_lis=train_lis, test_lis=test_lis, save=True, seed=seed)
-    return
+    return xtrain, xtest
 
 #######
 
@@ -362,4 +361,7 @@ def get_test_preds(test_data, race: str, baseline = "BL", full=False):
         return test2
 
 if __name__ == '__main__':
-    pass
+    size = 10000 # size1, size2 = 10000, 10000
+    train_yr, test_yr = [2021, 2022, 2023], [2024]
+    train, test = get_data(size_train=size, size_test=size, train_lis=train_yr, test_lis=test_yr, save=True)
+    print('done')

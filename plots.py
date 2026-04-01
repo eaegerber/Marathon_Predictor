@@ -125,7 +125,7 @@ def get_extrap_scatter(racename="bos", sample_size=1000, yrs=[2021, 2022, 2023],
     plt.savefig(filename, bbox_inches="tight", dpi=300)
     print(f"File saved: {filename}")
 
-def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: str = "bos", bar=True, rnd=3, other=True):
+def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: str = "bos", bar=True, rnd=3, other=True, pr=False):
     """Create table and plot (line or bar) to compare the MAE for multiple mdoels. Labels
       specifies the models to be shown."""
     fig, ax = plt.subplots()
@@ -156,7 +156,8 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
     if save_name != "":
         filename = f"analysis/plots/{save_name}_error{suff}.jpg"
         plt.savefig(filename, bbox_inches="tight", dpi=300)
-        print(f"File saved: {filename}")
+        if pr == False:
+            print(f"File saved: {filename}")
     plt.close()
 
     for lbl in models:
@@ -168,12 +169,13 @@ def plot_error(test_data: pd.DataFrame, models: list, baseline: str, save_name: 
 
     filename = f"analysis/tables/{save_name}_error.csv"
     table_group.round(rnd).to_csv(filename)
-    print(f"File saved: {filename}")
+    if pr == False:
+        print(f"File saved: {filename}")
     return table_group
 
 
 def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True, save_name: str = "bos", 
-                       palette="inferno", grouping="finish"): # grouping="age"
+                       palette="inferno", grouping="finish", pr=False): # grouping="age"
     """Create error plot grouped by finish time"""
     fig, ax = plt.subplots()
     fig.set_figheight(8)
@@ -202,14 +204,15 @@ def plot_finish_groups(test_data, model: str, baseline: str, num=4, overall=True
     plt.title(f"Average Error By Finish Groups - {marathon_map.get(save_name, save_name)}", fontsize=22)
     filename = f"analysis/plots/{save_name}_error_groups.jpg"
     plt.savefig(filename, bbox_inches="tight", dpi=300)
-    print(f"File saved: {filename}")
+    if pr == False:
+        print(f"File saved: {filename}")
     sns.reset_defaults()
     plt.close()
     return table_group
 
 
 def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=True, 
-                           save_name: str = "bos", palette="crest", grouping="age", bins=None):
+                           save_name: str = "bos", palette="crest", grouping="age", bins=None, pr=False):
     """Create MAE plot grouped by age group, for each gender"""
     fig, ax = plt.subplots(ncols=2, sharey=True)
     fig.set_figheight(10)
@@ -246,7 +249,8 @@ def plot_finish_age_gender(test_data, model: str, baseline: str, num=4, overall=
 
     filename = f"analysis/plots/{save_name}_error_gender_age.jpg"
     plt.savefig(filename, bbox_inches="tight", dpi=300)
-    print(f"File saved: {filename}")
+    if pr == False:
+        print(f"File saved: {filename}")
     sns.reset_defaults()
     plt.close()
     return
@@ -297,24 +301,30 @@ def plot_interval_checks(itbl: pd.DataFrame, pred_names: list, intervals: list =
 
     filename = f"analysis/plots/{save_name}_intervals"
     plt.savefig(filename + ".jpg", bbox_inches="tight", dpi=300)
-    print(f"File saved: {filename}")
     plt.close()
 
     filename = f"analysis/tables/{save_name}_int"
     big_table0.round(rnd).to_csv(filename + "_sizes.csv")
-    print(filename + "sizes.csv")
     big_table1.round(rnd).to_csv(filename + "_check.csv")
-    print(filename + "check.csv")
+    print(f"File saved for {save_name}: intervals.jpg, sizes.csv, check.csv")
     return big_table0, big_table1
 
 def plots_for_race(test_pred_data, race, models, baseline, comp_model):
     """Function for all plots except interval data"""
-    tbl = plot_error(test_pred_data, models, baseline, save_name=race, bar=True, other=True)
-    a = plot_finish_groups(test_pred_data, model=comp_model, baseline=baseline, save_name=race)
-    plot_finish_age_gender(test_pred_data, model=comp_model, baseline=baseline, save_name=race, grouping="age", bins=[0, 30, 40, 50])
+    tbl = plot_error(test_pred_data, models, baseline, save_name=race, bar=True, other=True, pr=True)
+    a = plot_finish_groups(test_pred_data, model=comp_model, baseline=baseline, save_name=race, pr=True)
+    plot_finish_age_gender(test_pred_data, model=comp_model, baseline=baseline, save_name=race, grouping="age", bins=[0, 30, 40, 50], pr=True)
+    print(f"File saved for {race}: error_bar.jpg, error.csv, error_groups.jpg, error_gender_age.jpg")    
     return tbl
 
-def tests_and_plots(test_data_full, races_list, models, baseline, comp_model, tests_list=["KS", "CVM", "AD", "Wilcoxon"]):
+def tests_and_plots(
+        test_data_full, races_list, models, baseline, full_preds=True, comp_model="", tests_list=["KS", "CVM", "AD", "Wilcoxon"]
+    ):
+    """Function to run all tests and plots for each race in `races_list`.
+        If a specific race is specified, it will subset only that race from the data.
+        If `full_preds` is True, will run interval checks and plots using full array.
+        Otherwise, will run error plots and tests using prediction means.
+        Return a dictionary with keys as each race and values as the generated tables."""
     tables = {}
     for race in races_list:
         if race != "all":
@@ -322,24 +332,15 @@ def tests_and_plots(test_data_full, races_list, models, baseline, comp_model, te
         else:
             test_df = test_data_full
         
-        tests_tbl = all_tests(data=test_df, models_list=models, savename=race, tests_list=tests_list)
-        error_tbl = plots_for_race(test_pred_data=test_df, race=race, models=models, baseline=baseline, comp_model=comp_model)
-        tables[race] = (tests_tbl, error_tbl)
-
-    return tables
-
-def tests_and_plots_full(test_data_full, races_list, models, baseline, comp_model, tests_list=["KS", "CVM", "AD", "Wilcoxon"]):
-    tables = {}
-    for race in races_list:
-        if race != "all":
-            test_df = test_data_full[test_data_full["Race"] == race]
-        else:
-            test_df = test_data_full
-        
-        preds2 = get_test_preds(test_df, "all", baseline=baseline, full=True)
-        intervals_tbl = add_intervals_to_test(test_df, preds2, models)
-        i_check, i_sizes = plot_interval_checks(intervals_tbl, models, save_name=race)
-        tables[race] = (i_check, i_sizes)
+        if full_preds: # full array, for interval checks and plots
+            preds_full = get_test_preds(test_df, "all", baseline=baseline, full=True)
+            intervals_tbl = add_intervals_to_test(test_df, preds_full, models)
+            i_check, i_sizes = plot_interval_checks(intervals_tbl, models, save_name=race)
+            tables[race] = (i_check, i_sizes)
+        else: # prediction means, for error plots and tests
+            tests_tbl = all_tests(data=test_df, models_list=models, savename=race, tests_list=tests_list)
+            error_tbl = plots_for_race(test_pred_data=test_df, race=race, models=models, baseline=baseline, comp_model=comp_model)
+            tables[race] = (tests_tbl, error_tbl)
 
     return tables
 
