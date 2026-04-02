@@ -17,11 +17,11 @@ card_style = "color:white; background:#2A2A2A !important;"
 ui.page_opts(title="Marathon Finish Time Predictor", fillable=True)
 
 with ui.sidebar(id="sidebar", open="open"):
-    ui.input_radio_buttons("radio", "Input Type",  {"0": "Total Time", "1": "Last Split"}, inline=True)  
+    ui.input_radio_buttons("radio", "Input Type",  {"0": "Total Time"}, inline=True)  # , "1": "Last Split"
     ui.input_radio_buttons("radio2", "Marathon Race",  {"0": "Boston", "1": "New York", "2": "Chicago"}, inline=True)  
     ui.input_select("select", label="Choose a distance", choices=marks, selected="5K")
     ui.input_text("runner_split1", value="", label="Enter time here:", placeholder="MM:SS or HH:MM:SS")
-    ui.input_action_button("bttn", "Add Time", class_="btn-success")
+    ui.input_action_button("bttn", "Update", class_="btn-success")
     ui.input_action_button("reset", "Reset", class_="btn-success")
 
     with ui.card(full_screen=True):
@@ -41,7 +41,7 @@ with ui.sidebar(id="sidebar", open="open"):
 with ui.nav_panel("My Plot"):
     with ui.layout_columns(fill=False):
         with ui.card(full_screen=True):
-            "View your finish time estimates in real time! Sequentially input your race splits in the text box below, click go, and view your live prediction at that stage of the race. Input your times in 5km increments [5K, 10K, ..., 40K].  NOTE: if the app errors, refresh the page and try again."
+            "View your finish time estimates in real time! Sequentially input your race splits in the sidebar text box, click update, and view your live prediction at that stage of the race. Input your times in 5km increments [5K, 10K, ..., 40K] using the total time.  NOTE: if the app errors, refresh the page and try again."
 
     with ui.layout_columns(col_widths=[6, 6, 12]):
 

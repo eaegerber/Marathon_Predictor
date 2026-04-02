@@ -13,7 +13,6 @@ features1 <- c("alpha", "total_pace", "race_nyc", "race_chi")
 features2 <- c("alpha", "total_pace", "male", "age_t", "race_nyc", "race_chi")
 features3 <- c("alpha", "total_pace", "race_nyc", "race_chi") # w/ curr_pace
 features4 <- c("alpha", "total_pace", "male", "age_t", "race_nyc", "race_chi") # w/ curr_pace
-features5 <- c("alpha", "total_pace", "curr_pace", "male", "age_t", "race_nyc", "race_chi")
 
 for (race in c("all")) {
     print(race)
